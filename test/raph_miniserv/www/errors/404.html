@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 — Page introuvable</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        line-height: 1.5;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: 24px;
+      }
+      .card {
+        max-width: 640px;
+        width: 100%;
+        border: 1px solid rgba(127, 127, 127, 0.25);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        background: rgba(127, 127, 127, 0.06);
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      p {
+        margin: 0 0 16px;
+        opacity: 0.9;
+      }
+      code {
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: rgba(127, 127, 127, 0.18);
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+      a {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(127, 127, 127, 0.35);
+        text-decoration: none;
+        color: inherit;
+        background: rgba(127, 127, 127, 0.08);
+      }
+      a:hover {
+        background: rgba(127, 127, 127, 0.14);
+      }
+      small {
+        opacity: 0.75;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="main">
+      <h1>404 — Page introuvable</h1>
+      <p>La ressource demandée n’existe pas (ou a été déplacée).</p>
+
+      <p><small>Tip: vérifie l’URL, ou retourne à la page d’accueil.</small></p>
+
+      <div class="actions">
+        <a href="/">Retour à l’accueil</a>
+        <a href="javascript:history.back()">Page précédente</a>
+      </div>
+
+      <p style="margin-top: 18px">
+        <small>miniServ</small>
+      </p>
+    </main>
+  </body>
+</html>

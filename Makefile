@@ -78,4 +78,11 @@ logs:
 
 re-docker: down up
 
+pull-libftpp:
+	git fetch libftpp
+	git subtree pull --prefix=lib/LIBFTPP libftpp main --squash
+
+push-libftpp:
+	git subtree push --prefix=lib/LIBFTPP libftpp main
+
 .PHONY: all clean fclean re colima-start up down join logs re-docker

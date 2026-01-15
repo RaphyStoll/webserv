@@ -71,71 +71,30 @@ void tockenize(DataConfig *data)
 
 void pars(DataConfig *data)
 {
-	ParseState state = GLOBAL;
-	ServerConfig currentServer;
-	RouteConfig currentRoute;
 
+	data->i = 0;
+	data->state = GLOBAL;
 	std::vector<std::string> token = data-> token;
-	size_t i = 0;
-
-	(void) data;
 	std::cout << "token.size = " << token.size() << std::endl;
 
-	while(i < token.size())
+	while(data->i < token.size())
 	{
-		if(state == GLOBAL)
+		if(data->state == GLOBAL)
 		{
-			if(token[i] == "server" && token[i + 1] == "{")
-			{
-				state = IN_SERVER;
-				currentServer= ServerConfig();
-				i += 2;
-				std::cout << "in server" << std::endl;
-			}
-			else
-			{
-				std::cerr << "invalid directiv" << std::endl;
-				i++;
-			}
+			state_global(data);
 		}
-		else if(state == IN_SERVER)
+		else if(data->state == IN_SERVER)
 		{
-			if(token[i] == "}")
-			{
-				state = GLOBAL;
-				data->servers.push_back(currentServer);
-				i++;
-				std::cout << "in global" << std::endl;
-			}
-			else if(token[i] == "route" && token[i + 1] == "/php")
-			{
-				state = IN_ROUTE;
-				currentRoute = RouteConfig();
-				i += 2;
-				std::cout << "in route" << std::endl;
-			}
-			else
-			{
-				std::cout << "autre" << std::endl;
-				i++;
-			}
+			state_server(data);
 		}
-		if(state == IN_ROUTE)
+		if(data->state == IN_ROUTE)
 		{
-			if(token[i] == "}")
-			{
-				state = IN_SERVER;
-				currentServer.routes.push_back(currentRoute);
-				i++;
-				std::cout << "de retour in server" << std::endl;
-			}
-			else
-			{
-				std::cout << "autre" << std::endl;
-				i++;
-			}
+			state_route(data);
 		}
 	}
+
+	if (data->state != GLOBAL)
+		std::cerr << "block {} unclosed" << std::endl;
 
 	std::cout << "fin du parsing" << std::endl;
 }
@@ -144,8 +103,15 @@ static bool openFileAndParseConfig(const std::string & config_path, DataConfig *
 {
 	std::cout << "config_path = " << config_path << std::endl;
 
-	std::ifstream file(config_path);
-	if(!file)
+//	std::ifstream file(config_path);
+//	if(!file)
+//	{
+//		std::cerr << "fichier introuvable" << std::endl;
+//		return (-1);
+//	}
+
+	std::ifstream file(config_path.c_str(), std::ios::in);
+	if (!file.is_open())
 	{
 		std::cerr << "fichier introuvable" << std::endl;
 		return (-1);
@@ -165,7 +131,7 @@ static bool openFileAndParseConfig(const std::string & config_path, DataConfig *
 		return (-1);
 	}
 
-	print_vect(data->brut_line);
+//	print_vect(data->brut_line);
 	std::cout << std::endl;
 	tockenize(data);
 	print_vect(data->token);

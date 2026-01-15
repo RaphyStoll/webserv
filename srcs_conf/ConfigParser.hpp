@@ -10,6 +10,12 @@
 
 #include"StringUtils.hpp"
 
+enum ParseState {
+	GLOBAL,
+	IN_SERVER,
+	IN_ROUTE
+};
+
 struct RouteConfig
 {
 	std::string path;
@@ -42,14 +48,16 @@ struct DataConfig {
 	std::vector<std::string> brut_line;
 	std::vector<std::string> token;
 	std::vector<ServerConfig> servers;
+	ParseState state;
+	ServerConfig currentServer;
+	RouteConfig currentRoute;
+	size_t i;
 };
 
-enum ParseState {
-	GLOBAL,
-	IN_SERVER,
-	IN_ROUTE
-};
 
-void init_server (ServerConfig &server);
+
+void state_global(DataConfig *data);
+void state_server(DataConfig *data);
+void state_route(DataConfig *data);
 
 #endif

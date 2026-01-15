@@ -2,36 +2,40 @@ NAME = pars
 
 PROG =	main\
 		init\
+		state\
 		StringUtils\
 
+OBJ_DIR = obj
 
 SRC = $(addsuffix .cpp, $(PROG))
 
-OBJ = $(addsuffix .o, $(PROG))
+OBJ = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(PROG)))
 
-CC = c++
+CC = g++
 
-CFLAGS = -Wall -Wextra -Werror
+#CFLAGS =  -Wall -Wextra -Werror
+CFLAGS =  -Wall -Wextra -Werror -std=c++98
+#CFLAGS =  -Wall -Wextra -fsanitize=thread -g
 
-all :		$(NAME)
+all:			$(OBJ_DIR) $(NAME)
 
-$(NAME) :	$(OBJ)
-			$(CC) $(OBJ) -o $(NAME)
+$(OBJ_DIR):
+				@mkdir -p $(OBJ_DIR)
 
-%.o :		%.cpp
-			$(CC) -c $< $(CFLAGS) -o $@
+$(NAME):		$(OBJ)
+				@$(CC) $(OBJ) $(CFLAGS) -o $(NAME)
 
-clean :
-			rm -f $(OBJ)
+$(OBJ_DIR)/%.o:	%.cpp
+				@$(CC) $(CFLAGS) -c $< -o $@
 
-fclean : 	clean
-			rm -f $(NAME)
+clean:
+				@rm -f $(OBJ)
 
-re :		fclean all
+fclean:			clean
+				@rm -f $(NAME)
 
-a :			all clean
+re:				fclean all
 
-valgrind :	$(NAME)
-			valgrind --leaks-check=full --show-leaks-kinds=all --track-origins=yes ./$(NAME)
+a:				fclean all clean
 
-.PHONY :	all clean fclean re a valgrind
+.PHONY:			all clean fclean re a

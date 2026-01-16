@@ -10,7 +10,7 @@ void state_global(DataConfig *data)
 		data->state = IN_SERVER;
 		data->currentServer = ServerConfig();
 		i += 2;
-		std::cout << "in server" << std::endl;
+//		std::cout << "in server" << std::endl;
 	}
 	else
 	{
@@ -30,21 +30,23 @@ void state_server(DataConfig *data)
 		data->state = GLOBAL;
 		data->servers.push_back(data->currentServer);
 		i++;
-		std::cout << "in global" << std::endl;
+//		std::cout << "in global" << std::endl;
+		data->i = i;
 	}
 	else if(i + 2 < token.size() && token[i] == "route" && token[i + 2] == "{")
 	{
 		data->state = IN_ROUTE;
 		data->currentRoute = RouteConfig();
 		i += 3;
-		std::cout << "in route" << std::endl;
+//		std::cout << "in route" << std::endl;
+		data->i = i;
 	}
 	else
-	{
-		std::cout << i << " " << std::endl;
-		i++;
+	{	
+//		std::cout << i << " " << std::endl;
+		dir_server(data);
 	}
-	data->i = i;
+
 }
 
 void state_route(DataConfig *data)
@@ -57,12 +59,14 @@ void state_route(DataConfig *data)
 		data->state = IN_SERVER;
 		data->currentServer.routes.push_back(data->currentRoute);
 		i++;
-		std::cout << "de retour in server" << std::endl;
+//		std::cout << "de retour in server" << std::endl;
+		data->i = i;
 	}
 	else
 	{
-		std::cout << i << " " << std::endl;
-		i++;
+		dir_route(data);
+//		std::cout << i << " " << std::endl;
+//		i++;
 	}
-	data->i = i;
+
 }

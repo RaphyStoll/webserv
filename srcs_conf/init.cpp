@@ -2,10 +2,10 @@
 
 ServerConfig::ServerConfig() :
 	listen(""),
-	port(80),
+	port(-1),
 	root(""),
 	index(""),
-	max_body_size(128),
+	max_body_size(0),
 	error_pages(),
 	routes()
 {
@@ -15,10 +15,10 @@ RouteConfig::RouteConfig() :
 	path(""),
 	root(""),
 	methods(),
-	directory_listing(0),
-	upload(),
-	upload_path(),
-	cgi(),
+	directory_listing(false),
+	upload(false),
+	upload_path(""),
+	cgi(false),
 	cgi_extention(""),
 	cgi_path("")
 {

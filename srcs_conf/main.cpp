@@ -1,6 +1,6 @@
 # include "ConfigParser.hpp"
 
-static bool supprComment(std::string &line)
+void suppr_comment(std::string &line) //SDU deplacer dans les utilitaires
 {
 	size_t commentPos = line.find('#');
 
@@ -8,22 +8,11 @@ static bool supprComment(std::string &line)
 		line = line.substr(0, commentPos);
 
 	line = libftpp::str::StringUtils::trim(line);
-
-	return(0);
-	
 }
 
-void print_vect(const std::vector<std::string> &vect)
-{
-	size_t i = 0;
-	while(i < vect.size())
-	{
-		std::cout << "vect[" << i << "] : " << vect[i] << std::endl;
-		i++;
-	}
-}
 
-void tockenize(DataConfig *data)
+
+void tockenize(DataConfig *data) //SDU deplacer dans les utilitaires
 {
 	std::string line;
 	std::string word;
@@ -69,13 +58,13 @@ void tockenize(DataConfig *data)
 	}
 }
 
-void pars(DataConfig *data)
+static void pars_state(DataConfig *data)
 {
 
 	data->i = 0;
 	data->state = GLOBAL;
 	std::vector<std::string> token = data-> token;
-	std::cout << "token.size = " << token.size() << std::endl;
+//	std::cout << "token.size = " << token.size() << std::endl;
 
 	while(data->i < token.size())
 	{
@@ -96,66 +85,59 @@ void pars(DataConfig *data)
 	if (data->state != GLOBAL)
 		std::cerr << "block {} unclosed" << std::endl;
 
-	std::cout << "fin du parsing" << std::endl;
 }
 
-static bool openFileAndParseConfig(const std::string & config_path, DataConfig * data)
+static void open_conf(DataConfig *data)
 {
-	std::cout << "config_path = " << config_path << std::endl;
-
-//	std::ifstream file(config_path);
-//	if(!file)
-//	{
-//		std::cerr << "fichier introuvable" << std::endl;
-//		return (-1);
-//	}
-
-	std::ifstream file(config_path.c_str(), std::ios::in);
+	std::ifstream file(data->config_path.c_str(), std::ios::in);
 	if (!file.is_open())
 	{
 		std::cerr << "fichier introuvable" << std::endl;
-		return (-1);
 	}
 
 	std::string line;
 	while( std::getline(file, line))
 	{
-		supprComment(line);
+		suppr_comment(line);
 		if(!line.empty())
 			data->brut_line.push_back(line);
 	}
 
-	if(data->brut_line.empty()) //tester + tard??
+	if(data->brut_line.empty()) //SDU inutil, tester + tard??
 	{
 		std::cerr << "fichier de config vide" << std::endl;
-		return (-1);
 	}
+}
 
+static void openFileAndParseConfig(DataConfig *data)
+{
+	std::cout << "config_path = " << data->config_path << std::endl;
+
+	open_conf(data);
 //	print_vect(data->brut_line);
-	std::cout << std::endl;
+//	std::cout << std::endl;
 	tockenize(data);
-	print_vect(data->token);
+//	print_vect(data->token);
+//	std::cout << std::endl;
+	pars_state(data);
 	std::cout << std::endl;
-	pars(data);
 
-
-	return(1);
+//	print_route(data->servers[0].routes[0]);
+//	print_server(data->servers[0]);
+	print_conf(data->servers);
 }
 
 int main () 
 {
-	std::cout << "lancement de webserv" << std::endl;
 	DataConfig data;
+
+	std::cout << "lancement de webserv" << std::endl;
 
 	std::string config_folder = "config";
 	std::string config_file = "config.conf";
-	std::string config_path = config_folder + "/" + config_file;
+	data.config_path = config_folder + "/" + config_file;
 
-	if (!openFileAndParseConfig(config_path, &data))
-	{
-		std::cerr << "error openFileAndParseConfig" << std::endl;
-		return (-1);
-	}
+	openFileAndParseConfig(&data);
 
 	return(0);
 }

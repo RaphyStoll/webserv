@@ -3,6 +3,8 @@ NAME = pars
 PROG =	main\
 		init\
 		state\
+		directive\
+		print\
 		StringUtils\
 
 OBJ_DIR = obj

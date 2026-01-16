@@ -45,6 +45,7 @@ struct ServerConfig
 };
 
 struct DataConfig {
+	std::string config_path;
 	std::vector<std::string> brut_line;
 	std::vector<std::string> token;
 	std::vector<ServerConfig> servers;
@@ -59,5 +60,13 @@ struct DataConfig {
 void state_global(DataConfig *data);
 void state_server(DataConfig *data);
 void state_route(DataConfig *data);
+
+void dir_server(DataConfig *data);
+void dir_route(DataConfig *data);
+
+void print_vect(const std::vector<std::string> &vect);
+void print_server (const ServerConfig &serv);
+void print_route (const RouteConfig &route);
+void print_conf (const std::vector<ServerConfig> &serv);
 
 #endif

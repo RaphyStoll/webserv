@@ -1,5 +1,5 @@
 #include "../../include/BootStrap.hpp"
-#include "../../lib/LIBFTPP/include/Net.hpp"
+#include "../../lib/LIBFTPP/include/libftpp.hpp"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 using namespace libftpp::net;
+using namespace libftpp::str;
 
 int webserv::create_listener_socket(int port) {
 	int sockfd;
@@ -16,7 +17,7 @@ int webserv::create_listener_socket(int port) {
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
-		throw std::runtime_error("socket() failed: " + std::string(strerror(errno)));
+		throw std::runtime_error("socket() failed: ");
 	}
 
 	if (!set_reuseaddr(sockfd)) {
@@ -31,7 +32,7 @@ int webserv::create_listener_socket(int port) {
 
 	if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		close(sockfd);
-		throw std::runtime_error("bind() failed on port " + std::to_string(port));
+		throw std::runtime_error("bind() failed on port " + StringUtils::itos(port));
 	}
 
 	if (listen(sockfd, SOMAXCONN) < 0) {

@@ -1,5 +1,6 @@
 #include "../include/BootStrap.hpp"
 #include "../include/Config.hpp"
+#include "../include/ConfigParser.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -26,13 +27,18 @@ NetworkConfig parseConfig(const std::string& config_file) {
 }
 
 int main(int argc, char** argv) {
-    std::string config_path = "config/default.conf";
+    std::string config_path = "config/config.conf";
+	DataConfig data;
+
     if (argc > 1) {
         config_path = argv[1];
     }
 
     try {
-        std::cout << "[Main] Loading configuration from " << config_path << "..." << std::endl;
+
+		
+		std::cout << "[Main] Loading configuration from " << config_path << "..." << std::endl;
+		openFileAndParseConfig(&data);
         NetworkConfig net_config = parseConfig(config_path);
 
         std::cout << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
@@ -42,7 +48,7 @@ int main(int argc, char** argv) {
 
     } catch (const std::exception& e) {
         std::cerr << "Fatal Error: " << e.what() << std::endl;
-        return 1;
+	    return 1;
     }
 
     return 0;

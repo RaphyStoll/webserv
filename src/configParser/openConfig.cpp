@@ -1,4 +1,5 @@
 # include "ConfigParser.hpp"
+# include "../../lib/LIBFTPP/include/libftpp.hpp"
 
 void suppr_comment(std::string &line) //SDU deplacer dans les utilitaires
 {
@@ -63,7 +64,7 @@ static void pars_state(DataConfig *data)
 	data->i = 0;
 	data->state = GLOBAL;
 	std::vector<std::string> token = data-> token;
-//	std::cout << "token.size = " << token.size() << std::endl;
+	libftpp::debug::print_debug("token.size = " + token.size());
 
 	while(data->i < token.size())
 	{
@@ -108,7 +109,7 @@ static void open_conf(DataConfig *data)
 	}
 }
 
-static void openFileAndParseConfig(DataConfig *data)
+void openFileAndParseConfig(DataConfig *data)
 {
 	std::cout << "config_path = " << data->config_path << std::endl;
 
@@ -125,16 +126,15 @@ static void openFileAndParseConfig(DataConfig *data)
 //	print_server(data->servers[0]);
 	print_conf(data->servers);
 }
-
+/*
 int main ()
 {
-	DataConfig data;
+//	DataConfig data;
 
-	std::cout << "lancement de webserv" << std::endl;
 
-	std::string config_folder = "config";
-	std::string config_file = "config.conf";
-	data.config_path = config_folder + "/" + config_file;
+// 	std::string config_folder = "config";
+// 	std::string config_file = "config.conf";
+// 	data.config_path = config_folder + "/" + config_file;
 
 	try
 	{
@@ -146,4 +146,4 @@ int main ()
 	}
 
 	return(0);
-}
+}*/

@@ -9,8 +9,7 @@
 #include <cctype>
 #include <stdexcept>
 
-#include"StringUtils.hpp"
-
+# include "../lib/LIBFTPP/include/libftpp.hpp"
 enum ParseState
 {
 	GLOBAL,
@@ -63,7 +62,7 @@ struct DataConfig {
 	size_t i;
 };
 
-
+void openFileAndParseConfig(DataConfig *data);
 
 void state_global(DataConfig *data);
 void state_server(DataConfig *data);

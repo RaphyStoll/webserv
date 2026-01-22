@@ -28,10 +28,9 @@ class RouteConfig
 	bool upload; // on
 	std::string upload_path; // ./www/site1/uploads
 	bool cgi; //on
-	std::string cgi_extention; // .php
+	std::string cgi_extension; // .php
 	std::string cgi_path; // /usr/bin/php-cgi
-
-	//redirect??
+	std::map<int, std::string> redirect; //redirect 301 /new
 
 	RouteConfig();
 };

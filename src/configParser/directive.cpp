@@ -52,7 +52,7 @@ void dir_server(DataConfig *data)
 		i++;
 		if(i >= token.size())
 			throw std::out_of_range("Acces token : " + token[i-1]);
-		data->currentServer.max_body_size = libftpp::str::StringUtils::stoi(token[i]); // SDU trop long
+		data->currentServer.max_body_size = libftpp::str::StringUtils::stoi(token[i]);
 		i++;
 	}
 	else if(token[i] == "error_page")
@@ -61,7 +61,7 @@ void dir_server(DataConfig *data)
 		if(i + 1 >= token.size())
 			throw std::out_of_range("Acces token : " + token[i-1]);
 		size_t n = libftpp::str::StringUtils::stoi(token[i]);
-		data->currentServer.error_pages.insert(std::make_pair(n,token[i + 1])); // SDU trop long
+		data->currentServer.error_pages.insert(std::make_pair(n,token[i + 1]));
 		i+=2;
 	}
 	else
@@ -80,7 +80,7 @@ void dir_server(DataConfig *data)
 	bool upload;
 	std::string upload_path;
 	bool cgi;
-	std::string cgi_extention;
+	std::string cgi_extension;
 	std::string cgi_path;
 */
 
@@ -130,6 +130,65 @@ void dir_route(DataConfig *data)
 		else
 			std::runtime_error("Unknow directory_listing directive : " + token[i]);
 		i++;
+	}
+	else if(token[i] == "upload")
+	{
+		i++;
+		if(i >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		if(token[i] == "off")
+			data->currentRoute.upload = 0;
+		else if(token[i] == "on")
+			data->currentRoute.upload = 1;
+		else
+			std::runtime_error("Unknow upload directive : " + token[i]);
+		i++;
+	}
+	else if(token[i] == "upload_path")
+	{
+		i++;
+		if(i >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		data->currentRoute.upload_path = token[i];
+		i++;
+	}
+	else if(token[i] == "cgi")
+	{
+		i++;
+		if(i >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		if(token[i] == "off")
+			data->currentRoute.cgi = 0;
+		else if(token[i] == "on")
+			data->currentRoute.cgi = 1;
+		else
+			std::runtime_error("Unknow upload directive : " + token[i]);
+		i++;
+	}
+	else if(token[i] == "cgi_extension")
+	{
+		i++;
+		if(i >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		data->currentRoute.cgi_extension = token[i];
+		i++;
+	}
+	else if(token[i] == "cgi_path")
+	{
+		i++;
+		if(i >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		data->currentRoute.cgi_path = token[i];
+		i++;
+	}
+	else if(token[i] == "redirect")
+	{
+		i++;
+		if(i + 1 >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		size_t n = libftpp::str::StringUtils::stoi(token[i]);
+		data->currentRoute.redirect.insert(std::make_pair(n,token[i + 1]));
+		i+=2;
 	}
 	else
 		throw std::runtime_error("Unknow route directive : " +  token[i]);

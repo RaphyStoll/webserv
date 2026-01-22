@@ -27,6 +27,7 @@ void print_route (const RouteConfig &route)
 
 void print_server (const ServerConfig &serv)
 {
+	std::cout << " server_name : " << serv.server_name << std::endl;
 	std::cout << " listen : " << serv.listen << std::endl;
 	std::cout << " port : " << serv.port << std::endl;
 	std::cout << " root : " << serv.root << std::endl;
@@ -65,5 +66,5 @@ void print_conf (const std::vector<ServerConfig> &serv)
 		print_server(serv[i]);
 		i++;
 	}
-
+	std::cout << std::endl;
 }

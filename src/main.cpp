@@ -26,6 +26,18 @@ using namespace webserv;
 // 	return config;
 // }
 
+NetworkConfig mapConfig(DataConfig *data)
+{
+	NetworkConfig net_tmp;
+
+	for(size_t i = 0; i < data->servers.size(); i++)
+	{
+		net_tmp[data->servers[i].port].push_back(data->servers[i]);
+	}
+ 	return net_tmp;
+
+}
+
 int main(int argc, char** argv) {
 	DataConfig data;
 	data.config_path = "config/config.conf";
@@ -41,9 +53,9 @@ int main(int argc, char** argv) {
 		NetworkConfig net_config = mapConfig(&data);
 
 		std::cout << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
-		BootStrap<NetworkConfig> server(net_config);
+		BootStrap<NetworkConfig> server1(net_config);
 
-		server.start();
+		server1.start();
 
 	} catch (const std::exception& e) {
 		std::cerr << "Fatal Error: " << e.what() << std::endl;

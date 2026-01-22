@@ -40,6 +40,7 @@ class ServerConfig
 {
 	public :
 
+	std::string server_name;
 	std::string listen; // 127.0.0.1
 	int port; // 8080
 	std::string root; // ./www/site1

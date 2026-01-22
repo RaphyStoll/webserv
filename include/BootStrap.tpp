@@ -36,7 +36,8 @@ namespace webserv {
 	}
 
 	template <typename TConfig>
-	void BootStrap<TConfig>::_setup_sockets() {
+	void BootStrap<TConfig>::_setup_sockets() 
+	{
 		typename TConfig::const_iterator it;
 		for (it = _config.begin(); it != _config.end(); ++it) {
 			int port = it->first;

@@ -1,7 +1,7 @@
 # include "ConfigParser.hpp"
 # include "../../lib/LIBFTPP/include/libftpp.hpp"
 
-void suppr_comment(std::string &line) //SDU deplacer dans les utilitaires
+static void suppr_comment(std::string &line)
 {
 	size_t commentPos = line.find('#');
 
@@ -11,9 +11,7 @@ void suppr_comment(std::string &line) //SDU deplacer dans les utilitaires
 	line = libftpp::str::StringUtils::trim(line);
 }
 
-
-
-void tockenize(DataConfig *data) //SDU deplacer dans les utilitaires ?
+static void tockenize(DataConfig *data)
 {
 	std::string line;
 	std::string word;
@@ -64,7 +62,7 @@ static void pars_state(DataConfig *data)
 	data->i = 0;
 	data->state = GLOBAL;
 	std::vector<std::string> token = data-> token;
-	//libftpp::debug::print_debug("token.size = " + token.size());
+	std::cout << "token.size = " << token.size() << std::endl;
 
 	while(data->i < token.size())
 	{
@@ -126,24 +124,3 @@ void openFileAndParseConfig(DataConfig *data)
 //	print_server(data->servers[0]);
 	print_conf(data->servers);
 }
-/*
-int main ()
-{
-//	DataConfig data;
-
-
-// 	std::string config_folder = "config";
-// 	std::string config_file = "config.conf";
-// 	data.config_path = config_folder + "/" + config_file;
-
-	try
-	{
-		openFileAndParseConfig(&data);
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << "Erreur : " << e.what() << std::endl;
-	}
-
-	return(0);
-}*/

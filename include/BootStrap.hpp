@@ -16,7 +16,7 @@ namespace webserv {
 	template <typename TConfig>
 	class BootStrap {
 		public:
-			BootStrap(const TConfig& config) : _config(config) {}
+			BootStrap(const TConfig& par_config) : _config(par_config) {}
 			~BootStrap() {}
 
 			void start();

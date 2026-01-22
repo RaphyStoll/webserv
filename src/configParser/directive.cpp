@@ -7,7 +7,15 @@ void dir_server(DataConfig *data)
 	std::vector<std::string> token = data->token;
 	size_t i = data->i;
 
-	if(token[i] == "listen")
+	if(token[i] == "server_name")
+	{
+		i++;
+		if(i >= token.size())
+			throw std::out_of_range("Acces token : " + token[i-1]);
+		data->currentServer.server_name = token[i];
+		i++;
+	}
+	else if(token[i] == "listen")
 	{
 		i++;
 		if(i >= token.size())

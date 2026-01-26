@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include <cerrno>
+#include <sstream>
 
 #include <unistd.h>
 #include <sys/socket.h>
@@ -144,7 +145,17 @@ using namespace webserv;
 						responseData=runPostMethod(parser.getRequest());
 						break;
 					case ERROR:
-						_logger << "Method: " << req.getMethod() << "not supported" << std::endl;
+					{
+						std::string body = "<html><body><h1>501 Not Implemented</h1></body></html>";
+						std::ostringstream oss;
+						oss << "HTTP/1.1 501 Not Implemented\r\n";
+						oss << "Content-Type: text/html\r\n";
+						oss << "Content-Length: " << body.length() << "\r\n";
+						oss << "\r\n";
+						oss << body;
+						responseData = oss.str();
+						_logger << "Method: " << req.getMethod() << " not supported" << std::endl;
+					}
 				}
 
 				if (!responseData.empty())

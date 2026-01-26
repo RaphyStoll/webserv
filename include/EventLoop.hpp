@@ -54,8 +54,10 @@ namespace webserv {
 			// en enum GET, DELET, POST pour switch
 			
 			std::string runGetMethod(const http::Request &req);
-			bool runDeletMethod(const http::Request &req);
-			bool runPostMethod(const http::Request &req);
+			std::string runDeletMethod(const http::Request &req);
+			std::string runPostMethod(const http::Request &req);
+			std::string runErrorMethod(const http::Request &req);
+			
 			Method toEnum(const std::string &s);
 		};
 }

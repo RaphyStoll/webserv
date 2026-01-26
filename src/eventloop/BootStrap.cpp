@@ -44,6 +44,5 @@ int webserv::create_listener_socket(int port) {
 		close(sockfd);
 		throw std::runtime_error("set_non_blocking() failed");
 	}
-
 	return sockfd;
 }

@@ -37,4 +37,9 @@ void BootStrap::_setup_sockets()
 				_logger << "[BootStrap] Failed to bind port " << port << ": " << e.what() << std::endl;
 			}
 		}
+
+		if (_listen_sockets.empty()) {
+			_logger << "[BootStrap] no server avalible shuthdown server"  << std::endl;
+			throw std::runtime_error("No sockets could be initialized. Check availability of addresses/ports.");
+		}
 	}

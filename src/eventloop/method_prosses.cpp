@@ -33,7 +33,7 @@ using namespace webserv;
 
 //  ----------------------------------------------------------------------------
 
-std::string EventLoop::runGetMethod(const http::Request &req, const ServerConfig& config)
+std::string EventLoop::_runGetMethod(const http::Request &req, const ServerConfig& config)
 {
 	std::string root = config.root; 
 	
@@ -57,8 +57,8 @@ std::string EventLoop::runGetMethod(const http::Request &req, const ServerConfig
 		return _generateErrorResponse(403, "Forbidden", config);
 	}
 
-	std::string content = readFile(fullPath);
-	std::string mimeType = getContentType(fullPath);
+	std::string content = _readFile(fullPath);
+	std::string mimeType = _getContentType(fullPath);
 
 	std::ostringstream response;
 	response << "HTTP/1.1 200 OK\r\n";
@@ -71,7 +71,7 @@ std::string EventLoop::runGetMethod(const http::Request &req, const ServerConfig
 	return response.str();
 }
 
-std::string EventLoop::runDeletMethod(const http::Request &req, const ServerConfig& config)
+std::string EventLoop::_runDeletMethod(const http::Request &req, const ServerConfig& config)
 {
 	(void)req;
 	(void)config;
@@ -86,7 +86,7 @@ std::string EventLoop::runDeletMethod(const http::Request &req, const ServerConf
 	return response.str();
 }
 
-std::string EventLoop::runPostMethod(const http::Request &req, const ServerConfig& config)
+std::string EventLoop::_runPostMethod(const http::Request &req, const ServerConfig& config)
 {
 	(void)req;
 	(void)config;

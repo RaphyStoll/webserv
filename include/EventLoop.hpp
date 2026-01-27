@@ -57,17 +57,17 @@ namespace webserv {
 			// transforme la RequestParser::Request std::string _method
 			// en enum GET, DELET, POST pour switch
 			
-			std::string runGetMethod(const http::Request &req, const ServerConfig &srvConfig);
-			std::string runDeletMethod(const http::Request &req, const ServerConfig &srvConfig);
-			std::string runPostMethod(const http::Request &req, const ServerConfig &srvConfig);
-			std::string runErrorMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runGetMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runDeletMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runPostMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runErrorMethod(const http::Request &req, const ServerConfig &srvConfig);
 			
-			Method toEnum(const std::string &s);
+			Method _toEnum(const std::string &s);
 			
 			// Récupère la bonne config serveur en fonction du port et du Header Host
 			const ServerConfig& _getServerConfig(int client_fd, const http::Request& req);
-			std::string getContentType(const std::string& path);
-			std::string readFile(const std::string& path);
+			std::string _getContentType(const std::string& path);
+			std::string _readFile(const std::string& path);
 			std::string _generateErrorResponse(int code, const std::string& msg, const ServerConfig& config);
 		};
 }

@@ -16,7 +16,7 @@ std::string EventLoop::_generateErrorResponse(int code, const std::string& msg, 
         struct stat s;
 
         if (::stat(filePath.c_str(), &s) == 0 && !(s.st_mode & S_IFDIR) && ::access(filePath.c_str(), R_OK) == 0) {
-            body = readFile(filePath);
+            body = _readFile(filePath);
             if (!body.empty()) {
                 customPageFound = true;
             }

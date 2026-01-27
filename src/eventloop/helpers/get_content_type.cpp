@@ -6,7 +6,7 @@
 using namespace webserv;
 
 // Détermine le type MIME en fonction de l'extension
-std::string EventLoop::getContentType(const std::string& path) {
+std::string EventLoop::_getContentType(const std::string& path) {
 	if (path.rfind(".html") != std::string::npos) return "text/html";
 	if (path.rfind(".css") != std::string::npos) return "text/css";
 	if (path.rfind(".js") != std::string::npos) return "application/javascript";

@@ -27,7 +27,7 @@ void BootStrap::_setup_sockets()
 				host = "0.0.0.0";
 			
 			try {
-				int sock_fd = create_listener_socket(port, host);
+				int sock_fd = _create_listener_socket(port, host);
 				_listen_sockets.push_back(sock_fd);
 
 				std::cout << "Listening on http://" << host << ":" << port << std::endl;

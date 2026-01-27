@@ -17,7 +17,7 @@ using namespace webserv;
 
 void EventLoop::_handle_client_data(int client_fd, size_t poll_index) {
 	char buffer[4096];
-	ssize_t bytes = read(client_fd, buffer, sizeof(buffer));
+	ssize_t bytes = ::read(client_fd, buffer, sizeof(buffer));
 
 	if (bytes < 0) {
 		_logger << "[EventLoop] read error on fd " << client_fd << ": " << strerror(errno) << std::endl;
@@ -38,15 +38,15 @@ void EventLoop::_handle_client_data(int client_fd, size_t poll_index) {
 			// Sélection du bon Virtual Server
 			const ServerConfig& srvConfig = _getServerConfig(client_fd, req);
 
-			switch (EventLoop::toEnum(req.getMethod())) {
+			switch (EventLoop::_toEnum(req.getMethod())) {
 				case GET:
-					responseData = runGetMethod(req, srvConfig);
+					responseData = _runGetMethod(req, srvConfig);
 					break;
 				case DELET:
-					responseData = runDeletMethod(req, srvConfig);
+					responseData = _runDeletMethod(req, srvConfig);
 					break;
 				case POST:
-					responseData = runPostMethod(req, srvConfig);
+					responseData = _runPostMethod(req, srvConfig);
 					break;
 				case ERROR:
 					responseData = _generateErrorResponse(501, "Not Implemented", srvConfig);
@@ -55,7 +55,7 @@ void EventLoop::_handle_client_data(int client_fd, size_t poll_index) {
 			}
 
 			if (!responseData.empty())
-				send(client_fd, responseData.c_str(), responseData.length(), 0);
+				::send(client_fd, responseData.c_str(), responseData.length(), 0);
 			
 			// actuellement je ferme après une requête (HTTP/1.0) (plus simple)
 			// si 1.1 reset le parser pour keep-alive (HTTP/1.1) plus tard

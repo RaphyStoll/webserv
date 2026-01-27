@@ -96,6 +96,7 @@ down:
 	$(COMPOSE) down
 
 join:
+	docker-compose up -d
 	docker exec -it webserv_tester /bin/zsh
 
 logs:

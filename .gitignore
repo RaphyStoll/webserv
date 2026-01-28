@@ -45,6 +45,7 @@ Makefile*
 miniserv
 webserv
 test_parser
+test_request
 Webserv
 
 compile_flags.txt

@@ -1,6 +1,8 @@
 #include "../include/BootStrap.hpp"
 #include "../include/Config.hpp"
 #include "../include/ConfigParser.hpp"
+#include "../include/EventLoop.hpp"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -40,6 +42,7 @@ NetworkConfig mapConfig(DataConfig *data)
 
 int main(int argc, char** argv) {
 	DataConfig data;
+	libftpp::debug::DebugLogger _logger("Main");
 	data.config_path = "config/config.conf";
 
 	if (argc > 1) {
@@ -47,15 +50,19 @@ int main(int argc, char** argv) {
 	}
 	try {
 
-		std::cout << "[Main] Loading configuration from " << data.config_path << "..." << std::endl;
+		_logger << "[Main] Loading configuration from " << data.config_path << "..." << std::endl;
 		openFileAndParseConfig(&data);
 
 		NetworkConfig net_config = mapConfig(&data);
 
-		std::cout << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
-		BootStrap<NetworkConfig> server1(net_config);
+		_logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
+		BootStrap server1(net_config);
 
 		server1.start();
+		
+		// Note: Il faudra ajouter la config au constructeur d'EventLoop
+		EventLoop loop(server1.getListenSockets(), net_config);
+		loop.run();
 
 	} catch (const std::exception& e) {
 		std::cerr << "Fatal Error: " << e.what() << std::endl;

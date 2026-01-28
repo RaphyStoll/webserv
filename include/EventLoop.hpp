@@ -1,12 +1,15 @@
 #ifndef EVENTLOOP_HPP
 # define EVENTLOOP_HPP
 
-# include <vector>
-# include <poll.h>
-# include <map>
+# include "../lib/LIBFTPP/include/libftpp.hpp"
 # include "RequestParser.hpp"
 # include "Request.hpp"
-# include "../lib/LIBFTPP/include/libftpp.hpp"
+
+# include <vector>
+# include <map>
+
+# include <poll.h>
+# include "Config.hpp"
 
 
 enum Method { ERROR, GET, DELET, POST };
@@ -22,7 +25,7 @@ namespace webserv {
 	 */
 	class EventLoop {
 		public:
-			EventLoop(const std::vector<int>& listen_sockets);
+			EventLoop(const std::vector<int>& listen_sockets, const NetworkConfig& config);
 			~EventLoop();
 
 			// Boucle principale
@@ -30,6 +33,7 @@ namespace webserv {
 
 		private:
 			libftpp::debug::DebugLogger _logger;
+			NetworkConfig _config;
 			
 			std::vector<int> _listen_sockets;
 			
@@ -53,10 +57,18 @@ namespace webserv {
 			// transforme la RequestParser::Request std::string _method
 			// en enum GET, DELET, POST pour switch
 			
-			bool runGetMethod(const http::Request &req);
-			bool runDeletMethod(const http::Request &req);
-			bool runPostMethod(const http::Request &req);
-			Method toEnum(const std::string &s);
+			std::string _runGetMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runDeletMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runPostMethod(const http::Request &req, const ServerConfig &srvConfig);
+			std::string _runErrorMethod(const http::Request &req, const ServerConfig &srvConfig);
+			
+			Method _toEnum(const std::string &s);
+			
+			// Récupère la bonne config serveur en fonction du port et du Header Host
+			const ServerConfig& _getServerConfig(int client_fd, const http::Request& req);
+			std::string _getContentType(const std::string& path);
+			std::string _readFile(const std::string& path);
+			std::string _generateErrorResponse(int code, const std::string& msg, const ServerConfig& config);
 		};
 }
 

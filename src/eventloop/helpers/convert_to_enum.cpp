@@ -1,8 +1,8 @@
-#include "../../include/EventLoop.hpp"
+#include "../../../include/EventLoop.hpp"
 
 using namespace webserv;
 
-Method EventLoop::toEnum(const std::string &s)
+Method EventLoop::_toEnum(const std::string &s)
 {
 	if (s == "GET")
 		return GET;

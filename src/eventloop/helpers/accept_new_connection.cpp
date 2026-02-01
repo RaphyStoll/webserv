@@ -38,6 +38,8 @@ void EventLoop::_accept_new_connection(int listen_fd) {
 	_poll_fds.push_back(pfd);
 
 	_client_parsers[client_fd] = http::RequestParser();
+	_client_timeouts[client_fd] = libftpp::time::Timeout(6000);
+	_client_timeouts[client_fd].touch(libftpp::time::Clock::now_ms());
 
 	_logger << "[EventLoop] New connection accepted (fd: " << client_fd << ")" << std::endl;
 }

@@ -31,7 +31,7 @@ using namespace webserv;
 		_logger << "[EventLoop] Entering main loop with " << _poll_fds.size() << " monitored fds." << std::endl;
 
 		while (true) {
-			int ret = poll(&_poll_fds[0], _poll_fds.size(), -1);
+			int ret = poll(&_poll_fds[0], _poll_fds.size(), 1000);
 			
 			if (ret < 0) {
 				if (errno == EINTR) continue;
@@ -42,6 +42,7 @@ using namespace webserv;
 			if (ret > 0) {
 				_handle_poll_events();
 			}
+			_check_timeouts();
 		}
 	}
 

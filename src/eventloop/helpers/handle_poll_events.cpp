@@ -10,12 +10,17 @@
 using namespace webserv;
 
 void EventLoop::_handle_poll_events() {
-		
+	unsigned long long now = libftpp::time::Clock::now_ms();
+	
 	for (size_t i = 0; i < _poll_fds.size(); ++i) {
 		if (_poll_fds[i].revents == 0) continue;
 
 		int fd = _poll_fds[i].fd;
 		short revents = _poll_fds[i].revents;
+
+		if (_client_timeouts.find(fd) != _client_timeouts.end()) {
+             _client_timeouts[fd].touch(now);
+        }
 
 		if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
 			 _close_connection(fd, i);

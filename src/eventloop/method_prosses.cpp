@@ -1,8 +1,12 @@
-#include "../../include/EventLoop.hpp"
 #include <sstream>
 #include <fstream>
+#include <cstdlib>
+#include <climits>
+
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "../../include/EventLoop.hpp"
 
 using namespace webserv;
 
@@ -35,14 +39,30 @@ using namespace webserv;
 
 std::string EventLoop::_runGetMethod(const http::Request &req, const ServerConfig& config)
 {
-	std::string root = config.root; 
-	
-	std::string fullPath = root + req.getPath();
+	std::string root = config.root;
+	std::string reqPath = req.getPath();
+
+	char resolvedRoot[PATH_MAX];
+	if (realpath(root.c_str(), resolvedRoot) == NULL)
+	    return _generateErrorResponse(500, "Internal Server Error (Invalid Root)", config);
+
+	std::string rawPath = root + reqPath;
+	char resolvedPath[PATH_MAX];
+
+	if (realpath(rawPath.c_str(), resolvedPath) == NULL)
+	    return _generateErrorResponse(404, "Not Found", config);
+
+	std::string absPath = resolvedPath;
+	std::string absRoot = resolvedRoot;
+
+	if (absPath.find(absRoot) != 0)
+	    return _generateErrorResponse(403, "Forbidden (Jail)", config);
+
+	std::string fullPath = absPath;
 
 	struct stat s;
-	if (::stat(fullPath.c_str(), &s) != 0) {
-		return _generateErrorResponse(404, "Not Found", config);
-	}
+	if (::stat(fullPath.c_str(), &s) != 0)
+	     return _generateErrorResponse(404, "Not Found", config);
 
 	if (s.st_mode & S_IFDIR) {
 		if (fullPath[fullPath.size() - 1] != '/') fullPath += "/";

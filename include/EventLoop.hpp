@@ -1,17 +1,20 @@
 #ifndef EVENTLOOP_HPP
 # define EVENTLOOP_HPP
 
-# include "../lib/LIBFTPP/include/libftpp.hpp"
-# include "RequestParser.hpp"
-# include "Request.hpp"
-
 # include <vector>
 # include <map>
 # include <string>
+#include <cstdlib>
+#include <climits>
 
 # include <poll.h>
-# include "Config.hpp"
+#include <sys/stat.h>
+#include <unistd.h>
 
+# include "../lib/LIBFTPP/include/libftpp.hpp"
+# include "RequestParser.hpp"
+# include "Request.hpp"
+# include "Config.hpp"
 
 enum Method { ERROR, GET, DELETE, POST };
 namespace webserv {
@@ -46,6 +49,12 @@ namespace webserv {
 
 			// map pour stocker les buffer de reponse en attente d'etre envoyer (fd -> data a envoyer)
 			std::map<int, std::string> _write_buffers;
+
+			// map pour stocker la derniere activiter (fd -> timer)
+			std::map<int, libftpp::time::Timeout> _client_timeouts;
+
+			// cleaner si timeout
+			void _check_timeouts();
 
 			// Initialise le vecteur _poll_fds avec les sockets d'écoute
 			void _setup_initial_poll_fds();

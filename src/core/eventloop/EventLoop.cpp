@@ -1,5 +1,5 @@
-#include "../../include/EventLoop.hpp"
-#include "../../lib/LIBFTPP/include/Net.hpp"
+#include "../../../include/EventLoop.hpp"
+#include "../../../lib/LIBFTPP/include/libftpp.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -15,19 +15,19 @@
 using namespace libftpp::net;
 using namespace webserv;
 
-	EventLoop::EventLoop(const std::vector<int>& listen_sockets, const NetworkConfig& config) 
+	webserv::core::EventLoop::EventLoop(const std::vector<int>& listen_sockets, const NetworkConfig& config) 
 		: _logger("EventLoop"), _config(config), _listen_sockets(listen_sockets) {
 		_setup_initial_poll_fds();
 	}
 
-	EventLoop::~EventLoop() {
+	webserv::core::EventLoop::~EventLoop() {
 		for (size_t i = 0; i < _poll_fds.size(); ++i) {
 			if (_poll_fds[i].fd >= 0)
 				close(_poll_fds[i].fd);
 		}
 	}
 
-	void EventLoop::run() {
+	void webserv::core::EventLoop::run() {
 		_logger << "[EventLoop] Entering main loop with " << _poll_fds.size() << " monitored fds." << std::endl;
 
 		while (true) {

@@ -2,7 +2,7 @@
 
 using namespace webserv;
 
-Method EventLoop::_toEnum(const std::string &s)
+Method webserv::core::EventLoop::_toEnum(const std::string &s)
 {
 	if (s == "GET")
 		return GET;

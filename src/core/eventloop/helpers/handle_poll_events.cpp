@@ -6,75 +6,75 @@
 #include <cstring>
 #include <cerrno>
 #include <string>
+#include <unistd.h> // Pour close
 
 using namespace webserv;
 
-void EventLoop::_handle_poll_events() {
-	unsigned long long now = libftpp::time::Clock::now_ms();
-	
-	for (size_t i = 0; i < _poll_fds.size(); ++i) {
-		if (_poll_fds[i].revents == 0) continue;
+void webserv::core::EventLoop::_handle_poll_events()
+{
+    for (size_t i = 0; i < _poll_fds.size(); ++i) {
 
-		int fd = _poll_fds[i].fd;
-		short revents = _poll_fds[i].revents;
+        if (_poll_fds[i].revents == 0) continue;
 
-		if (_client_timeouts.find(fd) != _client_timeouts.end()) {
-             _client_timeouts[fd].touch(now);
+        int fd = _poll_fds[i].fd;
+        short revents = _poll_fds[i].revents;
+
+        std::map<int, webserv::core::Client>::iterator it_client = _clients.find(fd);
+        bool is_known_client = (it_client != _clients.end());
+
+        if (is_known_client) {
+             it_client->second.updateLastActivity();
         }
 
-		if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
-			 _close_connection(fd, i);
-			 i--;
-			 continue;
-		}
+        if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+             _close_connection(fd, i);
+             i--;
+             continue;
+        }
 
-		if (revents & POLLIN) {
-			bool is_listener = false;
-			for (size_t j = 0; j < _listen_sockets.size(); ++j) {
-				if (fd == _listen_sockets[j]) {
-					is_listener = true;
-					break;
-				}
-			}
+        if (revents & POLLIN) {
+            bool is_listener = false;
+            for (size_t j = 0; j < _listen_sockets.size(); ++j) {
+                if (fd == _listen_sockets[j]) {
+                    is_listener = true;
+                    break;
+                }
+            }
 
-			if (is_listener) {
-				_accept_new_connection(fd);
-			}
-			else {
-				_handle_client_data(fd, i);
-			}
-		}
-		if (revents & POLLOUT) {
-            std::map<int, std::string>::iterator it = _write_buffers.find(fd);
-            if (it != _write_buffers.end() && !it->second.empty()) {
-                std::string& data = it->second;
+            if (is_listener)
+                _accept_new_connection(fd);
+            else
+                _handle_client_data(fd, i);
+        }
+
+        if (revents & POLLOUT) {
+            if (is_known_client && it_client->second.hasResponseToSend()) {
                 
-                // On essaie d'envoyer tout le buffer
+                std::string& data = it_client->second.getResponseBuffer();
+                
                 ssize_t bytes = ::send(fd, data.c_str(), data.size(), 0);
                 
                 if (bytes < 0) {
                     _logger << "[EventLoop] Send error: " << std::strerror(errno) << std::endl;
                     _close_connection(fd, i);
-                    i--; // Index reculé car suppression
+                    i--;
                     continue;
                 } 
                 else {
-                    // On retire ce qui a été envoyé (gestion du "Short Write")
                     data.erase(0, bytes);
                     
-                    // Si tout est envoyé
                     if (data.empty()) {
-                        _write_buffers.erase(it);
-                        
-                        // Pour l'instant on ferme après réponse (HTTP/1.0 style)
+                        _poll_fds[i].events = POLLIN; 
+
+                        // Pour l'instant : fermeture connexion (HTTP/1.0)
+                        // Plus tard ici : if (!keep_alive) close...
                         _logger << "[EventLoop] Response sent fully to " << fd << std::endl;
                         _close_connection(fd, i);
-                        i--; // Index reculé
+                        i--;
                         continue;
                     }
-				}
-				
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 }

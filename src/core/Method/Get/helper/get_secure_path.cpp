@@ -1,5 +1,5 @@
-#include "../../../include/Get.hpp"
-#include "../../../include/ResponseBuilder.hpp"
+#include "Get.hpp"
+#include "ResponseBuilder.hpp"
 
 #include <string>
 #include <climits>

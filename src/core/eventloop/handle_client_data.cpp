@@ -8,12 +8,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "../../../lib/LIBFTPP/include/libftpp.hpp"
-#include "../../../include/EventLoop.hpp"
-#include "../../../include/Client.hpp" 
-#include "../../../include/Request.hpp" 
-#include "../../../include/RequestParser.hpp"
-#include "../../../include/ResponseBuilder.hpp"
+#include "libftpp.hpp"
+#include "EventLoop.hpp"
+#include "Client.hpp" 
+#include "Request.hpp" 
+#include "RequestParser.hpp"
+#include "ResponseBuilder.hpp"
 
 using namespace libftpp::net;
 using namespace webserv;

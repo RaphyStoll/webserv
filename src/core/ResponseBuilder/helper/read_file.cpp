@@ -1,6 +1,6 @@
 #include <string>
 
-#include "../../../../include/ResponseBuilder.hpp"
+#include "ResponseBuilder.hpp"
 
 std::string webserv::http::ResponseBuilder::_readFile(const std::string& path) {
     std::ifstream file(path.c_str(), std::ios::in | std::ios::binary);

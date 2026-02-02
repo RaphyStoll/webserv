@@ -71,7 +71,7 @@ namespace webserv
 				// std::string _runPostMethod(const http::Request &req, const ServerConfig &srvConfig);
 				// std::string _runErrorMethod(const http::Request &req, const ServerConfig &srvConfig);
 
-				Method _toEnum(const std::string &s);
+				//Method _toEnum(const std::string &s);
 
 				// Récupère la bonne config serveur en fonction du port et du Header Host
 				const ServerConfig& _getServerConfig(int client_fd, const http::Request& req);

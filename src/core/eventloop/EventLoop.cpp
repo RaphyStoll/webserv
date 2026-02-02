@@ -1,5 +1,5 @@
-#include "../../../include/EventLoop.hpp"
-#include "../../../lib/LIBFTPP/include/libftpp.hpp"
+#include "EventLoop.hpp"
+#include "libftpp.hpp"
 
 #include <iostream>
 #include <cstring>

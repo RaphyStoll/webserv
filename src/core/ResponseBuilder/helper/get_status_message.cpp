@@ -1,6 +1,6 @@
 #include <string>
 
-#include "../../../../include/ResponseBuilder.hpp"
+#include "ResponseBuilder.hpp"
 
 std::string webserv::http::ResponseBuilder::getStatusMessage(int code) {
     switch (code) {

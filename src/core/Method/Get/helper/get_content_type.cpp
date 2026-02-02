@@ -1,5 +1,6 @@
-#include "../../../include/Get.hpp"
-#include "../../../include/ResponseBuilder.hpp" 
+#include "Get.hpp"
+#include "ResponseBuilder.hpp"
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

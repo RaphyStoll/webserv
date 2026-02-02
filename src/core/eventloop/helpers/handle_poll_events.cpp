@@ -1,12 +1,13 @@
-#include "../../../include/EventLoop.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
 #include <cstring>
 #include <cerrno>
 #include <string>
-#include <unistd.h> // Pour close
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+#include "EventLoop.hpp"
 
 using namespace webserv;
 

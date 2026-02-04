@@ -1,17 +1,20 @@
 #include "RequestParser.hpp"
+#include "../include/StringUtils.hpp"
 #include <cctype>
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace http
 {
 	RequestParser::RequestParser()
 		: _state(PARSING_REQUEST), _buffer(""), _errorCode(0), _contentLength(0),
 		  _maxBodySize(1048576), _bodyBytesRemaining(0), _currentChunkSize(0),
-		  _chunkBytesRemaining(0) {}
+		  _chunkBytesRemaining(0), _seenContentLength(0), _contentLengthHeaderValue(0),
+		  _headerCount(0) {}
 
 	RequestParser::~RequestParser() {}
 
@@ -80,18 +83,47 @@ namespace http
 		if (!(iss >> method >> uri >> version))
 			return false;
 
+		if (!_isValidMethod(method))
+		{
+			_errorCode = 501;
+			return false;
+		}
+
 		if (version != "HTTP/1.1")
+		{
+			return _errorCode = 505;
+			return false;
+		}
+
+		if (!_isValidRequestTarget(method, uri))
 			return false;
 
-		size_t queryPos = uri.find('?');
+		std::string pathPart = uri;
+		if (uri.find("http://") == 0 || uri.find("https://") == 0)
+		{
+			size_t schemeEnd = uri.find("://");
+			size_t pathStart = uri.find('/', schemeEnd + 3);
+			if (pathStart == std::string::npos)
+				pathPart = "/";
+			else
+				pathPart = uri.substr(pathStart);
+		}
+
+		size_t queryPos = pathPart.find('?');
 
 		if (queryPos != std::string::npos)
 		{
-			_request.setPath(uri.substr(0, queryPos));
-			_request.setQueryString(uri.substr(queryPos + 1));
+			_request.setPath(pathPart.substr(0, queryPos));
+			_request.setQueryString(pathPart.substr(queryPos + 1));
 		}
 		else
-			_request.setPath(uri);
+			_request.setPath(pathPart);
+
+		if (_hasDotDotSegment(_request.getPath()))
+		{
+			_errorCode = 400;
+			return false;
+		}
 
 		_request.setMethod(method);
 		_request.setHttpVersion(version);
@@ -102,15 +134,47 @@ namespace http
 
 	bool RequestParser::_parseHeader(const std::string &line)
 	{
-		size_t colonPos = line.find(':');
-		if (colonPos == std::string::npos)
+		if (line.size() > MAX_HEADER_LINE_LENGTH)
+		{
+			_errorCode = 431;
 			return false;
+		}
+
+		size_t colonPos = line.find(':');
+		if (colonPos == std::string::npos || colonPos == 0)
+		{
+			_errorCode = 400;
+			return false;
+		}
+
 		std::string key = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1);
+
+		if (!_isValidHeaderName(key))
+		{
+			_errorCode = 400;
+			return false;
+		}
 
 		// trim les espaces de la valeur
 		value.erase(0, value.find_first_not_of(" \t"));
 		value.erase(value.find_last_not_of(" \t") + 1);
+
+		for (size_t i = 0; i < value.size(); ++i)
+		{
+			unsigned char c = static_cast<unsigned char>(value[i]);
+			if ((c < 0x20 && c != '\t') || c == 0x7F)
+			{
+				_errorCode = 400;
+				return false;
+			}
+		}
+
+		std::string lowerKey = libftpp::str::StringUtils::toLower(key);
+		if (lowerKey == "content-length")
+			return _parseContentLengthHeader(value);
+		if (lowerKey == "transfer-encoding")
+			return _parseTransferEncodingHeader(value);
 
 		_request.setHeader(key, value);
 		return true;
@@ -120,21 +184,20 @@ namespace http
 
 	RequestParser::State RequestParser::_determineBodyParsing()
 	{
-		std::string transferEncoding = _request.getHeader("Transfer-Encoding");
-		std::string contentLengthStr = _request.getHeader("Content-Length");
-
-		if (transferEncoding.find("chunked") != std::string::npos)
+		if (_hasTransferEncoding)
 		{
 			_state = PARSING_CHUNK_SIZE;
 			return _state;
 		}
+
+		std::string contentLengthStr = _request.getHeader("Content-Length");
 
 		// body du content-length
 		if (!contentLengthStr.empty())
 		{
 			char *end;
 			_contentLength = std::strtoul(contentLengthStr.c_str(), &end, 10);
-			if (*end != '\0' || contentLengthStr.empty())
+			if (*end != '\0')
 			{
 				_errorCode = 400; // Content-Length error
 				return ERROR;
@@ -278,7 +341,8 @@ namespace http
 		_buffer.erase(0, endOfLine + 2);
 		if (!_parseRequestLine(requestLine))
 		{
-			_errorCode = 400;
+			if (_errorCode == 0)
+				_errorCode = 400;
 			return ERROR;
 		}
 		return PARSING_HEADERS;
@@ -291,17 +355,33 @@ namespace http
 			size_t endOfLine = _buffer.find("\r\n");
 			if (endOfLine == std::string::npos)
 				return PARSING_HEADERS;
+
 			if (endOfLine == 0)
 			{
 				_buffer.erase(0, 2);
 				return _determineBodyParsing();
 			}
+
 			std::string headerLine = _buffer.substr(0, endOfLine);
 			_buffer.erase(0, endOfLine + 2);
 
-			if (!_parseHeader(headerLine))
+			if (!headerLine.empty() && (headerLine[0] == ' ' || headerLine[0] == '\t'))
 			{
 				_errorCode = 400;
+				return ERROR;
+			}
+
+			++_headerCount;
+			if (_headerCount > MAX_HEADER_COUNT)
+			{
+				_errorCode = 431;
+				return ERROR;
+			}
+
+			if (!_parseHeader(headerLine))
+			{
+				if (_errorCode == 0)
+					_errorCode = 400;
 				return ERROR;
 			}
 		}
@@ -330,6 +410,178 @@ namespace http
 		default:
 			return "Unknown Error";
 		}
+	}
+
+	bool RequestParser::_isValidMethod(const std::string &method) const
+	{
+		if (method.empty())
+			return false;
+
+		for (size_t i = 0; i < method.size(); ++i)
+		{
+			char c = method[i];
+			if (!(std::isalnum(c) || c == '!' || c == '#' || c == '$' || c == '%' ||
+				  c == '&' || c == '\'' || c == '*' || c == '+' || c == '-' ||
+				  c == '.' || c == '^' || c == '_' || c == '`' || c == '|' ||
+				  c == '~'))
+				return false;
+		}
+
+		return (method == "GET" || method == "POST" || method == "DELETE");
+	}
+
+	bool RequestParser::_isValidHeaderName(const std::string &name) const
+	{
+		if (name.empty())
+			return false;
+		for (size_t i = 0; i < name.size(); ++i)
+		{
+			unsigned char c = static_cast<unsigned char>(name[i]);
+			if (!(std::isalnum(c) || c == '!' || c == '#' || c == '$' ||
+				  c == '%' || c == '&' || c == '\'' || c == '*' || c == '+' ||
+				  c == '-' || c == '.' || c == '^' || c == '_' || c == '`' ||
+				  c == '|' || c == '~'))
+				return false;
+		}
+		return true;
+	}
+
+	bool RequestParser::_hasDotDotSegment(const std::string &path) const
+	{
+		if (path.find("/../") != std::string::npos)
+			return true;
+		if (path.size() >= 3 && path.compare(path.size() - 3, 3, "/..") == 0)
+			return true;
+		if (path.compare(0, 3, "../") == 0)
+			return false;
+	}
+
+	bool RequestParser::_isValidRequestTarget(const std::string &method, const std::string &uri)
+	{
+		if (uri.empty())
+		{
+			_errorCode = 400;
+			return false;
+		}
+
+		if (uri.size(), MAX_URI_LENGTH)
+		{
+			_errorCode - 414;
+			return false;
+		}
+
+		for (size_t i = 0; i < uri.size(); ++i)
+		{
+			unsigned char c = static_cast<unsigned char>(uri[i]);
+			if (c <= 0x20 || c == 0x7F) // virer tout ce qui est avant espace et le delete
+			{
+				_errorCode = 400;
+				return false;
+			}
+		}
+
+		if (uri == "*") // uniquement true si la method OPTIONS est utilisee
+			return false;
+
+		return true;
+	}
+
+	bool RequestParser::_parseContentLengthHeader(const std::string &val)
+	{
+		std::vector<std::string> parts;
+		std::string tmp = val;
+		size_t pos = 0;
+
+		while ((pos = tmp.find(',')) != std::string::npos)
+		{
+			parts.push_back(tmp.substr(0, pos));
+			tmp.erase(0, pos + 1);
+		}
+		parts.push_back(tmp);
+
+		std::string norm;
+		for (size_t i = 0; i < parts.size(); ++i)
+		{
+			std::string p = parts[i];
+			p.erase(0, p.find_first_not_of(" /t"));
+			p.erase(p.find_last_not_of(" /t") + 1);
+
+			if (p.empty())
+			{
+				_errorCode = 400;
+				return false;
+			}
+
+			for (size_t j = 0; j < p.size(); ++j)
+			{
+				if (!std::isdigit(static_cast<unsigned char>(p[j]))) // cpp98 ?
+				{
+					_errorCode = 400;
+					return false;
+				}
+			}
+
+			if (norm.empty())
+				norm = p;
+			else if (norm != p)
+			{
+				_errorCode = 400;
+				return false;
+			}
+		}
+
+		if (_seenContentLength && _contentLengthHeaderValue != norm)
+		{
+			_errorCode = 400;
+			return false;
+		}
+
+		_seenContentLength = true;
+		_contentLengthHeaderValue = norm;
+		_request.setHeader("Content-Length", norm);
+		return true;
+	}
+
+	bool RequestParser::_parseTransferEncodingHeader(const std::string &val)
+	{
+		std::string v = libftpp::str::StringUtils::toLower(val);
+		v.erase(0, v.find_first_not_of(" \t"));
+		v.erase(v.find_last_not_of(" \t") + 1);
+
+		if (v.empty())
+		{
+			_errorCode = 400;
+			return false;
+		}
+
+		std::vector<std::string> parts;
+		std::string tmp = v;
+		size_t pos = 0;
+
+		while ((pos = tmp.find(',')) != std::string::npos)
+		{
+			parts.push_back(tmp.substr(0, pos));
+			tmp.erase(0, pos + 1);
+		}
+		parts.push_back(tmp);
+
+		if (parts.size() != 1)
+		{
+			_errorCode = 400;
+			return false;
+		}
+		parts[0].erase(0, parts[0].find_first_not_of(" \t"));
+		parts[0].erase(parts[0].find_last_not_of(" \t") + 1);
+
+		if (parts[0] != "chunked")
+		{
+			_errorCode = 501;
+			return false;
+		}
+
+		_hasTransferEncoding = true;
+		_request.setHeader("Transfer-Encoding", "chunked");
+		return true;
 	}
 
 } // namespace http

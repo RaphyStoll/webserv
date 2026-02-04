@@ -38,7 +38,25 @@ namespace http
 
 	void Request::setHeader(const std::string &name, const std::string &value)
 	{
-		_headers[libftpp::str::StringUtils::toLower(name)] = value;
+		std::string lower = libftpp::str::StringUtils::toLower(name);
+		if (lower == "content-length")
+		{
+			_headers[lower] = value;
+			return;
+		}
+		
+		std::map<std::string, std::string>::iterator it = _headers.find(lower);
+		if (it == _headers.end())
+		{
+			_headers[lower] = value;
+			return;
+		}
+		
+		if (!it->second.empty() && !value.empty())
+			it->second += ", " + value;
+		else
+			it->second += value;
+		
 	}
 
 	void Request::appendBody(const std::string &data) { _body.append(data); }

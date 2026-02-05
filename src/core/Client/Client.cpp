@@ -27,34 +27,34 @@ std::string& webserv::core::Client::getResponseBuffer() { return _response_buffe
 
 void webserv::core::Client::updateLastActivity()
 {
-    _last_activity.touch(libftpp::time::Clock::now_ms());
+	_last_activity.touch(libftpp::time::Clock::now_ms());
 }
 
 bool webserv::core::Client::hasTimedOut(unsigned long long now_ms, unsigned long long timeout_limit) const
 {
-    (void)timeout_limit; 
-    return _last_activity.expired(now_ms);
+	(void)timeout_limit; 
+	return _last_activity.expired(now_ms);
 }
 
 // --- Gestion des données ---
 
 void webserv::core::Client::appendResponse(const std::string& data)
 {
-    _response_buffer += data;
+	_response_buffer += data;
 }
 
 bool webserv::core::Client::hasResponseToSend() const { return !_response_buffer.empty(); }
 
 void webserv::core::Client::clearResponseBuffer()
 {
-    _response_buffer.clear();
+	_response_buffer.clear();
 }
 
 void webserv::core::Client::reset()
 {
-    _response_buffer.clear();
-    // TODO RAPH:
+	_response_buffer.clear();
+	// TODO RAPH:
 	// a use une fois implementer par seb
 	//_parser.reset(); 
-    updateLastActivity();
+	updateLastActivity();
 }

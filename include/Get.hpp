@@ -8,11 +8,11 @@
 namespace webserv {
 	namespace http {
 
-	    class Get {
-	    public:
-	        static std::string execute(const ::http::Request& req, const ServerConfig& config);
+		class Get {
+		public:
+			static std::string execute(const ::http::Request& req, const ServerConfig& config);
 
-	    private:
+		private:
 
 			// s'assure que le chemin soit viable (pas de ../.. etc)
 			static std::string _getSecurePath(const std::string& root, const std::string& reqPath, int& httpCode);

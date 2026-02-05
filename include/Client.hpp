@@ -7,39 +7,39 @@
 #include <string>
 
 namespace webserv {
-    namespace core {
+	namespace core {
 
-        class Client {
-        public:
-            // Constructeurs / Destructeur
-            Client(int fd);
-            Client();
-            ~Client();
+		class Client {
+		public:
+			// Constructeurs / Destructeur
+			Client(int fd);
+			Client();
+			~Client();
 			void reset();
 
-            // Getters
-            int getFd() const;
-            http::RequestParser& getParser();
-            std::string& getResponseBuffer();
+			// Getters
+			int getFd() const;
+			http::RequestParser& getParser();
+			std::string& getResponseBuffer();
 
-            // Gestion du Timeout
-            void updateLastActivity();
-            bool hasTimedOut(unsigned long long now_ms, unsigned long long timeout_limit) const;
+			// Gestion du Timeout
+			void updateLastActivity();
+			bool hasTimedOut(unsigned long long now_ms, unsigned long long timeout_limit) const;
 
-            // Gestion des données
-            void appendResponse(const std::string& data);
-            bool hasResponseToSend() const;
-            void clearResponseBuffer();
+			// Gestion des données
+			void appendResponse(const std::string& data);
+			bool hasResponseToSend() const;
+			void clearResponseBuffer();
 
-        private:
-            int _fd;
-            http::RequestParser _parser;
-            libftpp::time::Timeout _last_activity;
-            std::string _response_buffer;
+		private:
+			int _fd;
+			http::RequestParser _parser;
+			libftpp::time::Timeout _last_activity;
+			std::string _response_buffer;
 
-        };
+		};
 
-    } // namespace core
+	} // namespace core
 } // namespace webserv
 
 #endif

@@ -1,5 +1,7 @@
 #include "ResponseBuilder.hpp"
+#include "RouteMatcher.hpp"
 #include "Get.hpp"
+#include "Post.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -9,13 +11,17 @@ using namespace webserv::http;
 
 std::string webserv::http::ResponseBuilder::build(const ::http::Request& req, const ServerConfig& config) {
 	
-	std::string method = req.getMethod();
+	const RouteConfig& route = RouteMatcher::findRoute(req.getPath(), config);
+	if (!RouteMatcher::isMethodAllowed(req.getMethod(), route)) {
+        return generateError(405, config);
+    }
 
+	std::string method = req.getMethod();
 	if (method == "GET") {
 		return Get::execute(req, config);
 	} 
 	else if (method == "POST") {
-		return std::cout << "POST METHOD" << std::endl, "POST"; //Post::execute(req, config);
+		return Post::execute(req, config, route);
 	} 
 	else if (method == "DELETE") {
 		return std::cout << "DELETE METHOD" << std::endl, "DELETE"; //Delete::execute(req, config);

@@ -1,5 +1,6 @@
 #include "Request.hpp"
 #include "../include/StringUtils.hpp"
+#include <iostream>
 
 namespace http
 {
@@ -42,5 +43,21 @@ namespace http
 	}
 
 	void Request::appendBody(const std::string &data) { _body.append(data); }
+
+	void Request::print(void) const
+	{
+        std::cout << "  _method : " << _method << std::endl;
+        std::cout << "  _path : " << _path << std::endl;
+        std::cout << "  _queryString : " << _queryString << std::endl;
+        std::cout << "  _httpVersion : " << _httpVersion << std::endl;
+/*
+        std::cout << "  methods : ";
+        for(size_t i = 0 ; i < methods.size(); i++)
+            std::cout << methods[i] << " ";
+        std::cout << std::endl;
+*/
+        
+
+ 	}
 
 } // namespace http

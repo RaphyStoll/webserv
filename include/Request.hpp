@@ -46,6 +46,10 @@ namespace http
 			else
 				return (connection == "keep-alive");
 		}
+
+		void print(void) const; //SDU
+
+
 	};
 } // namespace http
 

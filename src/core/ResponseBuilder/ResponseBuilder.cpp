@@ -18,7 +18,7 @@ std::string webserv::http::ResponseBuilder::build(const ::http::Request& req, co
 
 	std::string method = req.getMethod();
 	if (method == "GET") {
-		return Get::execute(req, config);
+		return Get::execute(req, config,routes);
 	} 
 	else if (method == "POST") {
 		return Post::execute(req, config, route);

@@ -1,4 +1,4 @@
-#include "methods/Delete.hpp"
+#include "Delete.hpp"
 #include "ResponseBuilder.hpp"
 #include "RouteMatcher.hpp"
 #include "libftpp.hpp"
@@ -15,7 +15,7 @@ std::string webserv::http::Delete::_getDeletePath(const std::string& reqPath, co
 	std::string fullPath = libftpp::str::PathUtils::join(effectiveRoot, reqPath);
 
 	if (fullPath.find(effectiveRoot) != 0) {
-		httpCode = 403
+		httpCode = 403;
 		return "";
 	}
 	if (!libftpp::str::PathUtils::exists(fullPath)) {

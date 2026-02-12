@@ -1,4 +1,4 @@
-#include "methods/Delete.hpp"
+#include "Delete.hpp"
 #include "ResponseBuilder.hpp"
 #include "RouteMatcher.hpp"
 #include "libftpp.hpp"

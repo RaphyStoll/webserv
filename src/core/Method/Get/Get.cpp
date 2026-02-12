@@ -10,8 +10,9 @@
 
 using namespace webserv::http;
 
-std::string webserv::http::Get::execute(const ::http::Request& req, const ServerConfig& config)
+std::string webserv::http::Get::execute(const ::http::Request& req, const ServerConfig& config, const RouteConfig& route)
 {
+	(void)route;
 	int httpCode = 200;
 
 	std::string fullPath = _getSecurePath(config.root, req.getPath(), httpCode);

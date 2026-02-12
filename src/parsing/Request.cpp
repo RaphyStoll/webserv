@@ -51,6 +51,7 @@ namespace http
         std::cout << "  _path : " << _path << std::endl;
         std::cout << "  _queryString : " << _queryString << std::endl;
         std::cout << "  _httpVersion : " << _httpVersion << std::endl;
+		std::cout << "  _body : " << _body << std::endl;
 /*
         std::cout << "  methods : ";
         for(size_t i = 0 ; i < methods.size(); i++)

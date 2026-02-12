@@ -35,6 +35,21 @@ std::string execute_cgi(const ::http::Request& req, const ServerConfig& config, 
 		envString.push_back("PATH_INFO=" + req.getPath());
 		envString.push_back("SERVER_NAME=" + config.server_name);
 		envString.push_back("SERVER_PORT=" + libftpp::str::StringUtils::itos(config.port));
+		//SCRIPT_NAME //pas oblige
+		//CONTENT_LENGTH //seulement si body(POST) //ok
+		//CONTENT_TYPE //seulement si body(POST)  //ko seb
+		//SERVER_PROTOCOL //HTTP/1.1
+		//SERVER_SOFTWARE //C++98?
+		//GATEWAY_INTERFACE//CGI/2.4?
+
+		//HTTP_*********** issus du header//??seb
+
+		//REMOTE_ADDR //pas oblige
+		//REMOTE_HOST //pas oblige
+		//REMOTE_PORT //pas oblige
+		//DOCUMENT_ROOT //pas oblige
+
+		// https://datatracker.ietf.org/doc/html/rfc3875  chapt 4.1
 
 
 		std::vector<char*>env;

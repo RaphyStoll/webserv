@@ -88,6 +88,7 @@ std::string execute_cgi(const ::http::Request& req, const ServerConfig& config, 
 
 std::string webserv::http::Get::execute(const http::Request& req, const ServerConfig& config)
 {
+	(void)route;
 	int httpCode = 200;
 	std::string content = "";
 	std::string fullPath = "";

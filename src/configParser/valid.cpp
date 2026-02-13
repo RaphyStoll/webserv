@@ -45,6 +45,31 @@ void valid_path(DataConfig *data)
 		throw std::runtime_error("path access ko : " + data->currentToken);
 }
 
+void valid_file(DataConfig *data)
+{
+	std::string s = data->currentToken;
+	if(s.empty())
+		throw std::runtime_error("no file : " + s);
+	if(s.find('/') != std::string::npos || s.find("\\") != std::string::npos || s.find("..") != std::string::npos)
+		throw std::runtime_error("forbiden characters : " + s);
+	if(s == "." || s == "..")
+		throw std::runtime_error("forbiden characters : " + s);
+	for(size_t i = 0; i < s.size(); i++)
+	{
+		unsigned char c = s[i];
+		if (std::iscntrl(c))
+			throw std::runtime_error("forbiden characters : " + s);
+	}
+	s = data->currentServer.root + "/" + s;
+
+	std::cerr << "s = " << s << std::endl;
+	struct stat st;
+	if (stat(s.c_str(), &st) != 0)
+		throw std::runtime_error("file ko : " + data->currentToken);
+	if (access(s.c_str(), R_OK) != 0)
+		throw std::runtime_error("file access ko : " + data->currentToken);
+}
+
 int valid_ipv4(DataConfig *data)
 {
 	std::string ip = data->currentToken;

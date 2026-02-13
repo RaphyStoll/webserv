@@ -65,7 +65,7 @@ void dir_server(DataConfig *data)
 		if(i >= token.size())
 			throw std::out_of_range("Acces token : " + token[i-1]);
 		data->currentToken = token[i];
-		valid_path(data);
+		valid_file(data);
 		data->currentServer.index = token[i];
 		i++;
 	}

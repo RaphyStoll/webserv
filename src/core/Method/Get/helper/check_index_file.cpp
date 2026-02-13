@@ -3,12 +3,11 @@
 
 using namespace webserv::http;
 
-bool webserv::http::Get::_checkIndexFile(std::string& fullPath, int& httpCode) {
-	if (fullPath[fullPath.size() - 1] != '/') fullPath += "/";
-	
-	std::string indexPath = fullPath + "index.html"; // TODO RAPH: Utiliser config.index
+bool webserv::http::Get::_checkIndexFile(std::string& fullPath, int& httpCode, const ServerConfig& config) {
+	if (fullPath[fullPath.size() - 1] != '/')
+		fullPath += "/";
 
-//	std::cerr << "indexPath = " <<  indexPath << " code = " << httpCode << std::endl;//SDU
+	std::string indexPath = fullPath + config.index;
 
 	struct stat s;
 	if (stat(indexPath.c_str(), &s) == 0) {

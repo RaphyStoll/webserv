@@ -115,7 +115,7 @@ std::string webserv::http::Get::execute(const http::Request& req, const ServerCo
 	//std::cerr << "fullPath = " <<  fullPath << " code = " << httpCode << std::endl;
 	struct stat s;
 	if (stat(fullPath.c_str(), &s) == 0 && (s.st_mode & S_IFDIR)) {
-		if (!_checkIndexFile(fullPath, httpCode)) {
+		if (!_checkIndexFile(fullPath, httpCode, config)) {
 			// TODO: RAPH
 			// Ici, plus tard : quelque cgose comme if (config.autoindex) return AutoIndex::gen(...);
 			return ResponseBuilder::generateError(httpCode, config);

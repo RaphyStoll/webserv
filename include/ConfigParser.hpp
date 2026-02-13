@@ -98,6 +98,7 @@ void	valid_port(DataConfig *data);
 void	valid_max_body_size(DataConfig *data);
 void	valid_error_code(DataConfig *data);
 void	valid_path(DataConfig *data);
+void	valid_file(DataConfig *data);
 int		valid_ipv4(DataConfig *data);
 
 #endif

@@ -19,7 +19,7 @@ namespace webserv {
 
 			// Gère le cas des dossiers (cherche index.html)
 			// Retourn false si erreur/interdit.
-			static bool _checkIndexFile(std::string& fullPath, int& httpCode);
+			static bool _checkIndexFile(std::string& fullPath, int& httpCode, const ServerConfig& config);
 
 			// Construit la string finale HTTP 200 OK
 			static std::string _createSuccessResponse(const std::string& content, const std::string& path);

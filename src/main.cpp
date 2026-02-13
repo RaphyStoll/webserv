@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 	try {
 
 		_logger << "[Main] Loading configuration from " << data.config_path << "..." << std::endl;
-		openFileAndParseConfig(&data);
+		data.cParser();
 
 		NetworkConfig net_config = mapConfig(&data);
 
@@ -61,9 +61,6 @@ int main(int argc, char** argv) {
 		bootstrap.start();
 		
 		// Note: Il faudra ajouter la config au constructeur d'EventLoop
-	//	std::cout << "bootstrap.getListenSockets()[0] = " << bootstrap.getListenSockets()[0] << std::endl; //SDU
-	//	std::cout << "bootstrap.getListenSockets()[1] = " << bootstrap.getListenSockets()[1] << std::endl; //SDU
-	//	std::cout << "bootstrap.getListenSockets()[2] = " << bootstrap.getListenSockets()[2] << std::endl; //SDU
 		webserv::core::EventLoop loop(bootstrap.getListenSockets(), net_config);
 		loop.run();
 

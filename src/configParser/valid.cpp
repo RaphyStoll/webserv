@@ -8,46 +8,46 @@ static bool is_digit(char c) //SDU mettre ailleur?
 	return (c >= '0' && c <= '9');
 }
 
-void valid_port(DataConfig *data)
+void DataConfig::valid_port()
 {
-	int var = libftpp::str::StringUtils::stoi(data->currentToken);
+	int var = libftpp::str::StringUtils::stoi(_currentToken);
 	if (var < PORT_MIN || var > PORT_MAX)
-		throw std::runtime_error("port out of range : " + data->currentToken);
-//	for(size_t i = 0; i < data->servers.size(); i++)
+		throw std::runtime_error("port out of range : " + _currentToken);
+//	for(size_t i = 0; i < servers.size(); i++)
 //	{
-//		if(data->servers[i].port == var)
-//			throw std::runtime_error("port already in use in config : " + data->currentToken);
+//		if(servers[i].port == var)
+//			throw std::runtime_error("port already in use in config : " + _currentToken);
 //	}
 }
 
-void valid_max_body_size(DataConfig *data)
+void DataConfig::valid_max_body_size()
 {
-	size_t var = libftpp::str::StringUtils::stoi(data->currentToken);
+	size_t var = libftpp::str::StringUtils::stoi(_currentToken);
 	if (var <= MIN_BODY_SIZE_LIMIT || var > MAX_BODY_SIZE_LIMIT)
-		throw std::runtime_error("max_body_size out of range : " + data->currentToken);
+		throw std::runtime_error("max_body_size out of range : " + _currentToken);
 }
 
-void valid_error_code(DataConfig *data)
+void DataConfig::valid_error_code()
 {
-	size_t var = libftpp::str::StringUtils::stoi(data->currentToken);
+	size_t var = libftpp::str::StringUtils::stoi(_currentToken);
 	if (var < ERROR_CODE_MIN || var > ERROR_CODE_MAX)
-		throw std::runtime_error("error code out of range : " + data->currentToken);
-	if(data->currentServer.error_pages.count(var) > 0)
-			throw std::runtime_error("error code already used in config : " + data->currentToken);
+		throw std::runtime_error("error code out of range : " + _currentToken);
+	if(_currentServer.error_pages.count(var) > 0)
+			throw std::runtime_error("error code already used in config : " + _currentToken);
 }
 
-void valid_path(DataConfig *data)
+void DataConfig::valid_path()
 {
 	struct stat st;
-	if (stat(data->currentToken.c_str(), &st) != 0)
-		throw std::runtime_error("path ko : " + data->currentToken);
-	if (access(data->currentToken.c_str(), R_OK) != 0)
-		throw std::runtime_error("path access ko : " + data->currentToken);
+	if (stat(_currentToken.c_str(), &st) != 0)
+		throw std::runtime_error("path ko : " + _currentToken);
+	if (access(_currentToken.c_str(), R_OK) != 0)
+		throw std::runtime_error("path access ko : " + _currentToken);
 }
 
-void valid_file(DataConfig *data)
+void DataConfig::valid_file()
 {
-	std::string s = data->currentToken;
+	std::string s = _currentToken;
 	if(s.empty())
 		throw std::runtime_error("no file : " + s);
 	if(s.find('/') != std::string::npos || s.find("\\") != std::string::npos || s.find("..") != std::string::npos)
@@ -60,19 +60,19 @@ void valid_file(DataConfig *data)
 		if (std::iscntrl(c))
 			throw std::runtime_error("forbiden characters : " + s);
 	}
-	s = data->currentServer.root + "/" + s;
+	s = _currentServer.root + "/" + s;
 
 	std::cerr << "s = " << s << std::endl;
 	struct stat st;
 	if (stat(s.c_str(), &st) != 0)
-		throw std::runtime_error("file ko : " + data->currentToken);
+		throw std::runtime_error("file ko : " + _currentToken);
 	if (access(s.c_str(), R_OK) != 0)
-		throw std::runtime_error("file access ko : " + data->currentToken);
+		throw std::runtime_error("file access ko : " + _currentToken);
 }
 
-int valid_ipv4(DataConfig *data)
+int DataConfig::valid_ipv4()
 {
-	std::string ip = data->currentToken;
+	std::string ip = _currentToken;
 
 	size_t i = 0;
 	size_t j = 0;

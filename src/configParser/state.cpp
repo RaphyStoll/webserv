@@ -1,65 +1,53 @@
 #include"ConfigParser.hpp"
 
-void state_global(DataConfig *data)
+void DataConfig::state_global()
 {
-	std::vector<std::string> token = data->token;
-	size_t i = data->i;
-
-	if(i + 1 < token.size() && token[i] == "server" && token[i + 1] == "{")
+	if(_i + 1 < _token.size() && _token[_i] == "server" && _token[_i + 1] == "{")
 	{
 	//	std::cout << "in server 1" << std::endl;
-		data->state = IN_SERVER;
-		data->currentServer = ServerConfig();
-		i += 2;
+		_state = IN_SERVER;
+		_currentServer = ServerConfig();
+		_i += 2;
 	}
 	else
-		throw std::runtime_error("Invalid global directive : " + token[i]);
-	data->i = i;
+		throw std::runtime_error("Invalid global directive : " + _token[_i]);
 }
 
-void state_server(DataConfig *data)
+void DataConfig::state_server()
 {
-	std::vector<std::string> token = data->token;
-	size_t i = data->i;
-
-	if(token[i] == "}")
+	if(_token[_i] == "}")
 	{
-		data->state = GLOBAL;
-		data->servers.push_back(data->currentServer);
-		i++;
+		_state = GLOBAL;
+		servers.push_back(_currentServer);
+		_i++;
 //		std::cout << "in global" << std::endl;
-		data->i = i;
 	}
-	else if(i + 2 < token.size() && token[i] == "route" && token[i + 2] == "{")
+	else if(_i + 2 < _token.size() && _token[_i] == "route" && _token[_i + 2] == "{")
 	{
-		data->state = IN_ROUTE;
-		data->currentRoute = RouteConfig();
-		data->currentToken = token[i + 1];
-//		valid_path(data); //SDU a remettre, mais trop chiant pour les test
-		data->currentRoute.path = token[i+1];
-		i += 3;
+		_state = IN_ROUTE;
+		_currentRoute = RouteConfig();
+		_currentToken = _token[_i + 1];
+//		valid_path(); //SDU a remettre, mais trop chiant pour les test
+		_currentRoute.path = _token[_i + 1];
+		_i += 3;
 //		std::cout << "in route" << std::endl;
-		data->i = i;
 	}
 	else
-		dir_server(data);
+		dir_server();
 }
 
-void state_route(DataConfig *data)
+void DataConfig::state_route()
 {
-	std::vector<std::string> token = data->token;
-	size_t i = data->i;
-
-	if(token[i] == "}")
+	if(_token[_i] == "}")
 	{
 //		std::cout << "in server 2" << std::endl;
-		data->state = IN_SERVER;
-		data->currentServer.routes.push_back(data->currentRoute);
-		i++;
-		data->i = i;
+		_state = IN_SERVER;
+		_currentServer.routes.push_back(_currentRoute);
+		_i++;
 	}
-	else if(token[i] == "{")
+	else if(_token[_i] == "{")
 		throw std::runtime_error("too much block {}");
 	else
-		dir_route(data);
+		dir_route();
 }
+

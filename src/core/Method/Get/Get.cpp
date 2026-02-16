@@ -100,7 +100,17 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 	(void)httpCode; // FIXME : pas use pour l'instant mais comme la fontion n'est pas fini je le laisse
 
 	std::string effectiveRoute = webserv::http::RouteMatcher::getEffectiveRoot(config, route);
-	std::string fullPath = libftpp::str::PathUtils::join(effectiveRoute, req.getPath());
+	
+	std::string reqPath = req.getPath();
+	std::string fullPath;
+	
+	if (reqPath.find(route.path) == 0) {
+		std::string suffix = reqPath.substr(route.path.length());
+		fullPath = libftpp::str::PathUtils::join(effectiveRoute, suffix);
+	} else {
+		// Cas fallback
+		fullPath = libftpp::str::PathUtils::join(effectiveRoute, reqPath);
+	}
 
 	_logger << "Get effectiveRoute: " << effectiveRoute << std::endl;
 	_logger << "Get fullPath: " << fullPath << std::endl;

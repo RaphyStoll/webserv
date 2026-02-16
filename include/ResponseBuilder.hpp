@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "libftpp.hpp"
 #include "Request.hpp"
 #include "ConfigParser.hpp" 
 

@@ -11,7 +11,7 @@
 # include <sys/stat.h>
 # include <unistd.h>
 
-# include "../lib/LIBFTPP/include/libftpp.hpp"
+# include "libftpp.hpp"
 # include "RequestParser.hpp"
 # include "Request.hpp"
 # include "Client.hpp"

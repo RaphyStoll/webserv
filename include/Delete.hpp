@@ -3,6 +3,7 @@
 
 #include "Request.hpp"
 #include "ConfigParser.hpp"
+#include "libftpp.hpp"
 #include <string>
 
 namespace webserv {

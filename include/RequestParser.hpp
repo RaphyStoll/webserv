@@ -3,6 +3,8 @@
 
 #include "ConfigParser.hpp"
 #include "Request.hpp"
+#include "libftpp.hpp"
+
 #include <cstddef>
 #include <string>
 

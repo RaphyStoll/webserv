@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "../lib/LIBFTPP/include/libftpp.hpp"
+#include "libftpp.hpp"
 #include "ConfigParser.hpp"
 #include "RequestParser.hpp"
 #include <string>

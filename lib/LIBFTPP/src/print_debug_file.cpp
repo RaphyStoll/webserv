@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <cstdio>
+#include <ctime> 
+#include <iomanip>
 
 /**
  * @brief Constructeur de la classe DebugLogger
@@ -76,8 +78,13 @@ void libftpp::debug::DebugLogger::log(const std::string& message) {
 		std::ofstream outfile(_filename.c_str(), std::ios::app);
 		if (!outfile)
 			return ;
+
+		// Timestamp
+		std::time_t now = std::time(NULL);
+		char buffer[80];
+		std::strftime(buffer, sizeof(buffer), "[%d-%m-%Y %H:%M:%S] ", std::localtime(&now));
 		
-		outfile << message << std::endl;
+		outfile << buffer << message << std::endl;
 		outfile.close();
 	#else
 		(void)message;
@@ -135,8 +142,13 @@ void libftpp::debug::DebugLogger::debug(const std::string& message) {
 		std::ofstream outfile("debug.log", mode);
 		if (!outfile)
 			return ;
+
+		// Timestamp
+		std::time_t now = std::time(NULL);
+		char buffer[80];
+		std::strftime(buffer, sizeof(buffer), "[%d-%m-%Y %H:%M:%S] ", std::localtime(&now));
 		
-		outfile << message << std::endl;
+		outfile << buffer << message << std::endl;
 		outfile.close();
 	#else
 		(void)message;

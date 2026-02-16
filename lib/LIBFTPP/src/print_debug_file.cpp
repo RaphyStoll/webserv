@@ -86,6 +86,14 @@ void libftpp::debug::DebugLogger::log(const std::string& message) {
 		
 		outfile << buffer << message << std::endl;
 		outfile.close();
+
+		// Ecriture dans general.log
+		std::ofstream generalFile("log/general.log", std::ios::app);
+		if (generalFile) {
+			// On ajoute le nom du fichier d'origine pour savoir qui parle dans le general
+			generalFile << buffer << "[" << _filename << "] " << message << std::endl;
+			generalFile.close();
+		}
 	#else
 		(void)message;
 	#endif
@@ -150,6 +158,13 @@ void libftpp::debug::DebugLogger::debug(const std::string& message) {
 		
 		outfile << buffer << message << std::endl;
 		outfile.close();
+
+		// Ecriture dans general.log
+		std::ofstream generalFile("log/general.log", std::ios::app);
+		if (generalFile) {
+			generalFile << buffer << "[static debug] " << message << std::endl;
+			generalFile.close();
+		}
 	#else
 		(void)message;
 	#endif

@@ -1,6 +1,7 @@
 #include "../include/BootStrap.hpp"
 #include "../include/ConfigParser.hpp"
 #include "../include/EventLoop.hpp"
+#include "../include/SignalHandler.hpp"
 
 #include <iostream>
 #include <string>
@@ -30,6 +31,8 @@ using namespace webserv;
 
 
 int main(int argc, char** argv) {
+	SignalHandler::setup();
+
 	DataConfig data;
 	libftpp::debug::DebugLogger _logger("Main");
 	data.config_path = "config/config.conf";
@@ -40,17 +43,19 @@ int main(int argc, char** argv) {
 	try {
 
 		_logger << "[Main] Loading configuration from " << data.config_path << "..." << std::endl;
-		
+
 		NetworkConfig net_config = data.cParser();
 
 		_logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
 		BootStrap bootstrap(net_config);//
 
 		bootstrap.start();
-		
+
 		// Note: Il faudra ajouter la config au constructeur d'EventLoop
 		webserv::core::EventLoop loop(bootstrap.getListenSockets(), net_config);
 		loop.run();
+
+		_logger << "[Main] Server shutdown complete" << std::endl;
 
 	} catch (const std::exception& e) {
 		std::cerr << "Fatal Error: " << e.what() << std::endl;

@@ -15,7 +15,7 @@
 using namespace libftpp::net;
 using namespace webserv;
 
-	webserv::core::EventLoop::EventLoop(const std::vector<int>& listen_sockets, const NetworkConfig& config) 
+	webserv::core::EventLoop::EventLoop(const std::vector<int>& listen_sockets, const NetworkConfig& config)
 		: _logger("EventLoop"), _config(config), _listen_sockets(listen_sockets) {
 		_setup_initial_poll_fds();
 	}
@@ -26,7 +26,7 @@ using namespace webserv;
 				close(_poll_fds[i].fd);
 		}
 	}
-	
+
 	const NetworkConfig	webserv::core::EventLoop::getConfig()
 	{
 		return this->_config;
@@ -35,9 +35,9 @@ using namespace webserv;
 	void webserv::core::EventLoop::run() {
 		_logger << "[EventLoop] Entering main loop with " << _poll_fds.size() << " monitored fds." << std::endl;
 
-		while (true) {
+		while (SignalHandler::isRunning()) {
 			int ret = poll(&_poll_fds[0], _poll_fds.size(), 1000);
-			
+
 			if (ret < 0) {
 				if (errno == EINTR) continue;
 				_logger << "[EventLoop] poll error: " << std::strerror(errno) << std::endl;
@@ -49,10 +49,5 @@ using namespace webserv;
 			}
 			_check_timeouts();
 		}
+		_logger << "[EventLoop] Exiting main loop" << std::endl;
 	}
-
-
-
-
-
-	

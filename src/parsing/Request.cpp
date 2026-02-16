@@ -15,6 +15,8 @@ std::string Request::getPath() const { return _path; }
 std::string Request::getQueryString() const { return _queryString; }
 std::string Request::getHttpVersion() const { return _httpVersion; }
 std::string Request::getBody() const { return _body; }
+std::string Request::getContentLength() const { return _contentLength; };
+std::string Request::getContentType() const { return _contentType; };
 
 std::string Request::getHeader(const std::string &name) const
 {
@@ -31,6 +33,8 @@ void Request::setMethod(const std::string &method) { _method = method; }
 void Request::setPath(const std::string &path) { _path = path; }
 void Request::setQueryString(const std::string &query) { _queryString = query; }
 void Request::setBody(const std::string &body) { _body = body; }
+void Request::setContentLength(const std::string &content_l) { _contentLength = content_l; }
+void Request::setContentType(const std::string &content_t) { _contentType = content_t; }
 
 void Request::setHttpVersion(const std::string &version)
 {
@@ -75,8 +79,6 @@ void Request::setHeader(const std::string &name, const std::string &value)
             std::cout << methods[i] << " ";
         std::cout << std::endl;
 */
-        
+
 
  	}
-
-

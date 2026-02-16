@@ -5,7 +5,7 @@ using namespace webserv::http;
 
 bool RequestParser::_parseHeader(const std::string &line)
 {
-	if (line.size() > MAX_HEADER_LINE_LENGTH)
+	if (line.size() > DEFAULT_MAX_HEADER_LINE_LENGTH)
 	{
 		_errorCode = 431;
 		return false;
@@ -45,6 +45,11 @@ bool RequestParser::_parseHeader(const std::string &line)
 		return _parseContentLengthHeader(value);
 	if (lowerKey == "transfer-encoding")
 		return _parseTransferEncodingHeader(value);
+	if (lowerKey == "content-type") {
+		_request.setHeader(key, value);
+		_request.setContentType(value);
+		return true;
+	}
 	if (lowerKey == "connection")
 	{
 		_request.setHeader(key, libftpp::str::StringUtils::toLower(value));
@@ -79,7 +84,7 @@ RequestParser::State RequestParser::_parseHeadersState()
 		}
 
 		++_headerCount;
-		if (_headerCount > MAX_HEADER_COUNT)
+		if (_headerCount > DEFAULT_MAX_HEADER_COUNT)
 		{
 			_errorCode = 431;
 			return ERROR;

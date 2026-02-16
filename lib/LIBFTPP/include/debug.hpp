@@ -32,6 +32,7 @@ class DebugLogger {
 		
 		void log(const std::string& message);
 		void clear();
+		static void cleanAll();
 		
 		static void debug(const std::string& message);
 

@@ -5,6 +5,8 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
+#include <cstdio>
 
 /**
  * @brief Constructeur de la classe DebugLogger
@@ -29,8 +31,11 @@ libftpp::debug::DebugLogger::DebugLogger(const std::string& filename) {
 
 	#ifdef DEBUG
 		// Effacer le fichier à la création du logger
-		std::ofstream outfile(_filename.c_str(), std::ios::trunc);
-		outfile.close();
+		// std::ofstream outfile(_filename.c_str(), std::ios::trunc); 
+		// outfile.close();
+        // Modification: On n'efface plus le fichier à chaque construction
+        // pour éviter d'effacer les logs à chaque requête si le logger est
+        // instancié localement (ex: dans une méthode Get).
 	#endif
 }
 
@@ -86,6 +91,26 @@ void libftpp::debug::DebugLogger::clear() {
 	#ifdef DEBUG
 		std::ofstream outfile(_filename.c_str(), std::ios::trunc);
 		outfile.close();
+	#endif
+}
+
+/**
+ * @brief Supprime tous les fichiers .log du dossier log/
+ */
+void libftpp::debug::DebugLogger::cleanAll() {
+	#ifdef DEBUG
+		DIR *dir;
+		struct dirent *ent;
+		if ((dir = opendir("log")) != NULL) {
+			while ((ent = readdir(dir)) != NULL) {
+				std::string filename = ent->d_name;
+				if (filename.length() > 4 && filename.substr(filename.length() - 4) == ".log") {
+					std::string filepath = "log/" + filename;
+					std::remove(filepath.c_str());
+				}
+			}
+			closedir(dir);
+		}
 	#endif
 }
 

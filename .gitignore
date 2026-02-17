@@ -49,5 +49,6 @@ webserv
 test_parser
 test_request
 Webserv
+newfile.html
 
 compile_flags.txt

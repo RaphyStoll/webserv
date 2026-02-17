@@ -1,12 +1,13 @@
 #include "Request.hpp"
 #include "../include/StringUtils.hpp"
 #include <iostream>
+#include "libftpp.hpp"
 
 
 using namespace webserv::http;
 
 Request::Request()
-	: _method(""), _path(""), _queryString(""), _httpVersion(""), _body("") {}
+	: _logger_request("request") ,_method(""), _path(""), _queryString(""), _httpVersion(""), _body("") {}
 
 Request::~Request() {}
 
@@ -67,12 +68,12 @@ void Request::setHeader(const std::string &name, const std::string &value)
 
 		void Request::print(void) const
 	{
-		std::cout << "Request : " << std::endl;
-        std::cout << "  _method : " << _method << std::endl;
-        std::cout << "  _path : " << _path << std::endl;
-        std::cout << "  _queryString : " << _queryString << std::endl;
-        std::cout << "  _httpVersion : " << _httpVersion << std::endl;
-		std::cout << "  _body : " << _body << std::endl;
+		_logger_request << "Request : " << std::endl;
+        _logger_request << "  _method : " << _method << std::endl;
+        _logger_request << "  _path : " << _path << std::endl;
+        _logger_request << "  _queryString : " << _queryString << std::endl;
+        _logger_request << "  _httpVersion : " << _httpVersion << std::endl;
+		_logger_request << "  _body : " << _body << std::endl;
 /*
         std::cout << "  methods : ";
         for(size_t i = 0 ; i < methods.size(); i++)

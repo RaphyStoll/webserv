@@ -26,10 +26,13 @@ class DebugLogger {
 		 * @param filename nom du fichier de log
 		 */
 		DebugLogger(const std::string& filename);
+		DebugLogger(const DebugLogger& other);
+		DebugLogger& operator=(const DebugLogger& other);
 		~DebugLogger();
 		
 		void log(const std::string& message);
 		void clear();
+		static void cleanAll();
 		
 		static void debug(const std::string& message);
 

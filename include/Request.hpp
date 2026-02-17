@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include "libftpp.hpp"
+
 namespace webserv
 {
 	namespace http
@@ -12,6 +14,7 @@ namespace webserv
 		class Request
 		{
 		private:
+			mutable libftpp::debug::DebugLogger _logger_request;
 			std::string _method;
 			std::string _path;
 			std::string _queryString;

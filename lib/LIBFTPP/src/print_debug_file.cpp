@@ -5,6 +5,9 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
+#include <cstdio>
+#include <ctime> 
 
 /**
  * @brief Constructeur de la classe DebugLogger
@@ -29,9 +32,31 @@ libftpp::debug::DebugLogger::DebugLogger(const std::string& filename) {
 
 	#ifdef DEBUG
 		// Effacer le fichier à la création du logger
-		std::ofstream outfile(_filename.c_str(), std::ios::trunc);
-		outfile.close();
+		// std::ofstream outfile(_filename.c_str(), std::ios::trunc); 
+		// outfile.close();
+        // Modification: On n'efface plus le fichier à chaque construction
+        // pour éviter d'effacer les logs à chaque requête si le logger est
+        // instancié localement (ex: dans une méthode Get).
 	#endif
+}
+
+/**
+ * @brief Constructeur de copie
+ */
+libftpp::debug::DebugLogger::DebugLogger(const DebugLogger& other) : _filename(other._filename) {
+	_ss << other._ss.str();
+}
+
+/**
+ * @brief Opérateur d'affectation
+ */
+libftpp::debug::DebugLogger& libftpp::debug::DebugLogger::operator=(const DebugLogger& other) {
+	if (this != &other) {
+		_filename = other._filename;
+		_ss.str("");
+		_ss << other._ss.str();
+	}
+	return *this;
 }
 
 /**
@@ -52,9 +77,22 @@ void libftpp::debug::DebugLogger::log(const std::string& message) {
 		std::ofstream outfile(_filename.c_str(), std::ios::app);
 		if (!outfile)
 			return ;
+
+		// Timestamp
+		std::time_t now = std::time(NULL);
+		char buffer[80];
+		std::strftime(buffer, sizeof(buffer), "[%d-%m-%Y %H:%M:%S] ", std::localtime(&now));
 		
-		outfile << message << std::endl;
+		outfile << buffer << message << std::endl;
 		outfile.close();
+
+		// Ecriture dans general.log
+		std::ofstream generalFile("log/general.log", std::ios::app);
+		if (generalFile) {
+			// On ajoute le nom du fichier d'origine pour savoir qui parle dans le general
+			generalFile << buffer << "[" << _filename << "] " << message << std::endl;
+			generalFile.close();
+		}
 	#else
 		(void)message;
 	#endif
@@ -67,6 +105,26 @@ void libftpp::debug::DebugLogger::clear() {
 	#ifdef DEBUG
 		std::ofstream outfile(_filename.c_str(), std::ios::trunc);
 		outfile.close();
+	#endif
+}
+
+/**
+ * @brief Supprime tous les fichiers .log du dossier log/
+ */
+void libftpp::debug::DebugLogger::cleanAll() {
+	#ifdef DEBUG
+		DIR *dir;
+		struct dirent *ent;
+		if ((dir = opendir("log")) != NULL) {
+			while ((ent = readdir(dir)) != NULL) {
+				std::string filename = ent->d_name;
+				if (filename.length() > 4 && filename.substr(filename.length() - 4) == ".log") {
+					std::string filepath = "log/" + filename;
+					std::remove(filepath.c_str());
+				}
+			}
+			closedir(dir);
+		}
 	#endif
 }
 
@@ -91,9 +149,21 @@ void libftpp::debug::DebugLogger::debug(const std::string& message) {
 		std::ofstream outfile("debug.log", mode);
 		if (!outfile)
 			return ;
+
+		// Timestamp
+		std::time_t now = std::time(NULL);
+		char buffer[80];
+		std::strftime(buffer, sizeof(buffer), "[%d-%m-%Y %H:%M:%S] ", std::localtime(&now));
 		
-		outfile << message << std::endl;
+		outfile << buffer << message << std::endl;
 		outfile.close();
+
+		// Ecriture dans general.log
+		std::ofstream generalFile("log/general.log", std::ios::app);
+		if (generalFile) {
+			generalFile << buffer << "[static debug] " << message << std::endl;
+			generalFile.close();
+		}
 	#else
 		(void)message;
 	#endif

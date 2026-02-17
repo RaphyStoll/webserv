@@ -31,10 +31,14 @@ using namespace webserv;
 
 
 int main(int argc, char** argv) {
+	
+	libftpp::debug::DebugLogger::cleanAll();
+
 	SignalHandler::setup();
 
 	DataConfig data;
 	libftpp::debug::DebugLogger _logger("Main");
+	_logger << "Server started" << std::endl;
 	data.config_path = "config/config.conf";
 
 	if (argc > 1) {

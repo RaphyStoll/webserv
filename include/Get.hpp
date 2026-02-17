@@ -3,6 +3,8 @@
 
 #include "Request.hpp"
 #include "ConfigParser.hpp"
+#include "libftpp.hpp"
+
 #include <string>
 
 namespace webserv {
@@ -11,7 +13,6 @@ namespace webserv {
 		class Get {
 		public:
 			static std::string execute(const webserv::http::Request& req, const ServerConfig& config, const RouteConfig& route);
-
 		private:
 
 			// s'assure que le chemin soit viable (pas de ../.. etc)

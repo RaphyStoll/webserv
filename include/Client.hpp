@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "../lib/LIBFTPP/include/libftpp.hpp"
+#include "libftpp.hpp"
 #include "ConfigParser.hpp"
 #include "RequestParser.hpp"
 #include <string>
@@ -33,10 +33,11 @@ public:
   void clearResponseBuffer();
 
 private:
-  int _fd;
-  webserv::http::RequestParser _parser;
-  libftpp::time::Timeout _last_activity;
-  std::string _response_buffer;
+	mutable libftpp::debug::DebugLogger _logger;
+	int _fd;
+	webserv::http::RequestParser _parser;
+	libftpp::time::Timeout _last_activity;
+	std::string _response_buffer;
 };
 
 } // namespace core

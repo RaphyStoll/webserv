@@ -4,7 +4,7 @@
 # include <vector>
 # include <iostream>
 
-# include "../lib/LIBFTPP/include/libftpp.hpp"
+# include "libftpp.hpp"
 # include "RequestParser.hpp"
 
 namespace webserv {

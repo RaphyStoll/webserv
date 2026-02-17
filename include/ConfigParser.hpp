@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <cstdlib>
 
-#include "../lib/LIBFTPP/include/libftpp.hpp"
+#include "libftpp.hpp"
 
 #define MAX_BODY_SIZE_LIMIT (1024 * 1024)
 #define MIN_BODY_SIZE_LIMIT 0

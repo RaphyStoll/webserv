@@ -47,7 +47,7 @@ RequestParser::State RequestParser::parse(const char *data, size_t size, const N
 					_state = ERROR;
 					return _state;
 				}
-				_resolveConfigLimits();
+				//_resolveConfigLimits();
 			}
 			break;
 
@@ -110,24 +110,24 @@ void RequestParser::_resolveConfigLimits(){
 		hostPort = std::atoi(portStr.c_str());
 	}
 
-	for (NetworkConfig::const_iterator portIt = _config->begin(); portIt != _config->end(); ++portIt)
-	{
-		if (hostPort != 0 && portIt->first != hostPort)
-			continue;
-		const std::vector<ServerConfig>& servers = portIt->second;
-		for (size_t i = 0; i < servers.size(); ++i)
-		{
-			if (servers[i].server_name == hostName || hostPort != 0)
-			{
-				_maxBodySize = servers[i].max_body_size;
-				return;
-			}
-		}
+	// for (NetworkConfig::const_iterator portIt = _config->begin(); portIt != _config->end(); ++portIt)
+	// {
+	// 	if (hostPort != 0 && portIt->first != hostPort)
+	// 		continue;
+	// 	const std::vector<ServerConfig>& servers = portIt->second;
+	// 	for (size_t i = 0; i < servers.size(); ++i)
+	// 	{
+	// 		if (servers[i].server_name == hostName || hostPort != 0)
+	// 		{
+	// 			_maxBodySize = servers[i].max_body_size;
+	// 			return;
+	// 		}
+	// 	}
 
-		if (!servers.empty() && (hostPort == 0 || portIt->first == hostPort))
-		{
-			_maxBodySize = servers[0].max_body_size;
-			return;
-		}
-	}
+	// 	if (!servers.empty() && (hostPort == 0 || portIt->first == hostPort))
+	// 	{
+	// 		_maxBodySize = servers[0].max_body_size;
+	// 		return;
+	// 	}
+	// }
 }

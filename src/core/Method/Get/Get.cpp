@@ -185,18 +185,19 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 			_logger << "=====  CGI (GET)  =====" << std::endl;
 			_logger << "cgi = "<< req.getPath() << std::endl;
 
-			// for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou il faut le positionner
-	 		// {
-	 			// if(req.getPath() == config.routes[i].path)
-	 			// {
-					// fullPath = "cgi.html";
-					// 
-					std::string output = execute_cgi(req, config, 0);
-					// return _createSuccessResponse(effectiveRoute, fullPath);
-					// }
-					// }
-					
+			std::string output;
+			for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou il faut le positionner
+	 		{
+	 			if(req.getPath() == config.routes[i].path)
+	 			{
+					fullPath = "cgi.html";
+					 
+					output = execute_cgi(req, config, i);
 					_logger << "output = " << output << std::endl;
+					return _createSuccessResponse(effectiveRoute, fullPath);
+				}
+			}
+					
 			//partie cgi
 			// pas reussi a inclure la fonction actuel je pense elle devrait avoir besoin
 			// de ces 4 info pour fonctionner ou en tout cas avec ces 4 la t'as tout en cas de besoin

@@ -1,11 +1,12 @@
 #include"ConfigParser.hpp"
+#include"RequestParser.hpp"
 
 ServerConfig::ServerConfig() :
 	listen(""),
 	port(-1),
 	root(""),
 	index(""),
-	max_body_size(0),
+	max_body_size(DEFAULT_MAX_BODY_SIZE),
 	error_pages(),
 	routes(),
 	autoindex(0)

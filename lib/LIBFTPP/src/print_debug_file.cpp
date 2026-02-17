@@ -26,7 +26,7 @@ libftpp::debug::DebugLogger::DebugLogger(const std::string& filename) {
 	// Créer le dossier log s'il n'existe pas
 	struct stat st;
 	if (stat("log", &st) != 0)
-		mkdir("log", 0600);
+		mkdir("log", 0777);
 
 	_filename = "log/" + name;
 

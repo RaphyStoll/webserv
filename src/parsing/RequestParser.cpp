@@ -21,7 +21,7 @@ RequestParser::State RequestParser::parse(const char *data, size_t size, const N
 	_buffer.append(data, size);
 
 	// fin de ligne
-	if (_buffer.size() > MAX_REQUEST_SIZE)
+	if (_buffer.size() > DEFAULT_MAX_REQUEST_SIZE)
 	{
 		_errorCode = 413;
 		_state = ERROR;
@@ -47,6 +47,7 @@ RequestParser::State RequestParser::parse(const char *data, size_t size, const N
 					_state = ERROR;
 					return _state;
 				}
+				_resolveConfigLimits();
 			}
 			break;
 
@@ -77,6 +78,7 @@ void RequestParser::reset()
 	_buffer.clear();
 	_errorCode = 0;
 	_contentLength = 0;
+	_maxBodySize = DEFAULT_MAX_BODY_SIZE;
 	_bodyBytesRemaining = 0;
 	_currentChunkSize = 0;
 	_chunkBytesRemaining = 0;
@@ -84,5 +86,48 @@ void RequestParser::reset()
 	_contentLengthHeaderValue.clear();
 	_hasTransferEncoding = false;
 	_headerCount = 0;
+	_config = NULL;
+	_configResolved = false;
 	_request = Request();
+}
+
+void RequestParser::_resolveConfigLimits(){
+	if (_configResolved || _config == NULL)
+		return;
+
+	_configResolved = true;
+
+	std::string host = _request.getHeader("Host");
+	if (host.empty())
+		return;
+
+	size_t colonPos = host.find(':');
+	std::string hostName = (colonPos != std::string::npos) ? host.substr(0, colonPos) : host;
+	int hostPort = 0;
+	if (colonPos != std::string::npos)
+	{
+		std::string portStr = host.substr(colonPos + 1);
+		hostPort = std::atoi(portStr.c_str());
+	}
+
+	for (NetworkConfig::const_iterator portIt = _config->begin(); portIt != _config->end(); ++portIt)
+	{
+		if (hostPort != 0 && portIt->first != hostPort)
+			continue;
+		const std::vector<ServerConfig>& servers = portIt->second;
+		for (size_t i = 0; i < servers.size(); ++i)
+		{
+			if (servers[i].server_name == hostName || hostPort != 0)
+			{
+				_maxBodySize = servers[i].max_body_size;
+				return;
+			}
+		}
+
+		if (!servers.empty() && (hostPort == 0 || portIt->first == hostPort))
+		{
+			_maxBodySize = servers[0].max_body_size;
+			return;
+		}
+	}
 }

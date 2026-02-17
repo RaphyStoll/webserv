@@ -47,6 +47,7 @@ bool RequestParser::_parseContentLengthHeader(const std::string &val)
 	_seenContentLength = true;
 	_contentLengthHeaderValue = norm;
 	_request.setHeader("Content-Length", norm);
+	_request.setContentLength(norm);
 	return true;
 }
 

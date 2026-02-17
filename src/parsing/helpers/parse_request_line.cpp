@@ -90,7 +90,7 @@ bool RequestParser::_isValidRequestTarget(const std::string &uri)
 		return false;
 	}
 
-	if (uri.size() > MAX_URI_LENGTH)
+	if (uri.size() > DEFAULT_MAX_URI_LENGTH)
 	{
 		_errorCode = 414;
 		return false;

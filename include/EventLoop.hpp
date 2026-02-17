@@ -15,16 +15,17 @@
 # include "RequestParser.hpp"
 # include "Request.hpp"
 # include "Client.hpp"
+#include "SignalHandler.hpp"
 
 enum Method { ERROR, GET, DELETE, POST };
 namespace webserv
 {
 	namespace core
 	{
-		
+
 		/**
 		 * @brief Gestionnaire principal de la boucle d'événements (Reactor Pattern
-		 * 
+		 *
 		 * Cette classe utilise poll() pour surveiller à la fois les sockets (nouvelles connexions)
 		 * et les sockets clients (données entrantes)
 		 * Elle distribue les événements aux gestionnaires appropriés (handle, accept, read, close)
@@ -35,10 +36,10 @@ namespace webserv
 				~EventLoop();
 
 				const NetworkConfig	getConfig();
-				
+
 				// Boucle principale
 				void run();
-			
+
 			private:
 				libftpp::debug::DebugLogger _logger;
 				NetworkConfig _config;
@@ -82,7 +83,7 @@ namespace webserv
 		};
 	}
 }
-	
-	
-	
+
+
+
 #endif

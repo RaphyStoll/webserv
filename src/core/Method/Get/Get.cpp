@@ -25,8 +25,8 @@ std::vector<std::string> build_envString(const webserv::http::Request& req, cons
 	envString.push_back("PATH_INFO="); // /results  est ce que ca doit etre parse avant ou ici?
 	envString.push_back("SERVER_NAME=" + config.server_name); // OK VPS_SDU_9003
 	envString.push_back("SERVER_PORT=" + libftpp::str::StringUtils::itos(config.port)); // OK 9003
-	envString.push_back("CONTENT_TYPE="); // Cela provient du navigateur, c est le type exact des données envoyées dans le body HTTP. exemple : text/plain, application/json, application/x-www-form-urlencoded
-	envString.push_back("CONTENT_LENGTH=");  // Cela provient du navigateur, c est la taille du body
+	envString.push_back("CONTENT_TYPE=" + req.getContentType()); // Cela provient du navigateur, c est le type exact des données envoyées dans le body HTTP. exemple : text/plain, application/json, application/x-www-form-urlencoded
+	envString.push_back("CONTENT_LENGTH=" + req.getContentLength());  // Cela provient du navigateur, c est la taille du body
 	envString.push_back("SCRIPT_NAME=" + config.routes[i].root); // OK seulement POST // cgi/search.py
 	envString.push_back("SERVER_PROTOCOL=" + req.getHttpVersion()); //OK HTTP/1.1 // Cela provient du navigateur et n a rien a voir avec ce que renvoie la requete python ou query
 	envString.push_back("SERVER_SOFTWARE=" + ServerInfo::SERVER_SOFTWARE); // OK webserv/1.0
@@ -34,6 +34,9 @@ std::vector<std::string> build_envString(const webserv::http::Request& req, cons
 
 	//HTTP_*********** issus du header//??seb
 	// https://datatracker.ietf.org/doc/html/rfc3875  chapt 4.1
+
+	std::cerr << "req.getContentType() = " << req.getContentType() << std::endl;
+	std::cerr << "req.getContentLength() = " << req.getContentLength() << std::endl;
 
 	return(envString);
 }

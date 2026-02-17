@@ -1,0 +1,72 @@
+URL complète
+┌──────────────────────────────────────────────┐
+/cgi-bin/search.py/results/images?q=42
+└──────────────────────────────────────────────┘
+
+SCRIPT_NAME
+┌───────────────┐
+/cgi-bin/search.py
+
+PATH_INFO
+                 ┌──────────────┐
+                 /results/images
+
+QUERY_STRING
+                                ┌─────┐
+                                q=42
+
+
+Requête :
+GET /cgi-bin/search.py/results/images?q=42 HTTP/1.1
+🧠 Étape 1 — Trouver le SCRIPT CGI (IMPORTANT)
+
+Apache/Nginx cherchent :
+
+➡️ le plus long préfixe correspondant à un fichier exécutable CGI
+
+Découpage progressif :
+
+/cgi-bin/search.py/results/images
+|----------------------------|  ? existe ?
+
+
+Ils testent :
+
+1️⃣ /cgi-bin/search.py/results/images → ❌ fichier n’existe pas
+2️⃣ /cgi-bin/search.py/results → ❌
+3️⃣ /cgi-bin/search.py → ✅ EXISTE
+
+➡️ STOP.
+
+Donc :
+
+SCRIPT_NAME = /cgi-bin/search.py
+
+🧠 Étape 2 — Extraire PATH_INFO
+
+Tout ce qui reste après le script :
+
+/results/images
+
+
+Donc :
+
+PATH_INFO = /results/images
+
+🧠 Étape 3 — Query string
+
+Après le ? :
+
+q=42
+
+
+Donc :
+
+QUERY_STRING = q=42
+
+🎯 Résultat final (ULTRA important)
+SCRIPT_NAME = /cgi-bin/search.py
+PATH_INFO   = /results/images
+QUERY_STRING = q=42
+
+

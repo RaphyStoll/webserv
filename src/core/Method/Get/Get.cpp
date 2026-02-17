@@ -16,58 +16,68 @@
 
 using namespace webserv::http;
 
+std::vector<std::string> build_envString(const webserv::http::Request& req, const ServerConfig& config, size_t i)
+{
+	std::vector<std::string> envString;
+
+	envString.push_back("REQUEST_METHOD=" + req.getMethod()); // OK GET
+	envString.push_back("QUERY_STRING=" + req.getQueryString()); // query=webserv KO trop long si path_info
+	envString.push_back("PATH_INFO="); // /results  est ce que ca doit etre parse avant ou ici?
+	envString.push_back("SERVER_NAME=" + config.server_name); // OK VPS_SDU_9003
+	envString.push_back("SERVER_PORT=" + libftpp::str::StringUtils::itos(config.port)); // OK 9003
+	envString.push_back("CONTENT_TYPE="); // Cela provient du navigateur, c est le type exact des données envoyées dans le body HTTP. exemple : text/plain, application/json, application/x-www-form-urlencoded
+	envString.push_back("CONTENT_LENGTH=");  // Cela provient du navigateur, c est la taille du body
+	envString.push_back("SCRIPT_NAME=" + config.routes[i].root); // OK seulement POST // cgi/search.py
+	envString.push_back("SERVER_PROTOCOL=" + req.getHttpVersion()); //OK HTTP/1.1 // Cela provient du navigateur et n a rien a voir avec ce que renvoie la requete python ou query
+	envString.push_back("SERVER_SOFTWARE=" + ServerInfo::SERVER_SOFTWARE); // OK webserv/1.0
+	envString.push_back("GATEWAY_INTERFACE=" + ServerInfo::GATEWAY_INTERFACE); // OK CGI/1.1
+
+	//HTTP_*********** issus du header//??seb
+	// https://datatracker.ietf.org/doc/html/rfc3875  chapt 4.1
+
+	return(envString);
+}
+
+
 std::string execute_cgi(const webserv::http::Request& req, const ServerConfig& config, size_t i)
 {
 	std::cout << std::endl << "on est dans CGI" << std::endl << std::endl;
 //	req.print();
 //	config.print();
+//   http://37.59.120.163:9003/search?query=webserv/results   //SDU
+//   http://37.59.120.163:9003//cgi-bin/search.py/results   //SDU
 
 	int pipefd[2];
-	pipe(pipefd);
+	if (pipe(pipefd) == -1)
+		throw std::runtime_error("CGI pipe failed");
 
 	pid_t pid = fork();
+
+	if(pid < 0)
+	{
+		close(pipefd[0]);
+		close(pipefd[1]);
+		throw std::runtime_error("CGI fork failed");
+	}
 
 	if(pid == 0 ) // fils
 	{
 		close(pipefd[0]);
-		dup2(pipefd[1], STDOUT_FILENO);
+		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
+		{
+			close(pipefd[1]);
+			_exit(1);
+		}
 		close(pipefd[1]);
 
-		std::vector<std::string> envString;
-		envString.push_back("REQUEST_METHOD=" + req.getMethod());
-		envString.push_back("QUERY_STRING=" + req.getQueryString());
-		envString.push_back("PATH_INFO=" + req.getPath());
-		envString.push_back("SERVER_NAME=" + config.server_name);
-		envString.push_back("SERVER_PORT=" + libftpp::str::StringUtils::itos(config.port));
-		envString.push_back("CONTENT_TYPE=text/html"); //seulement POST
-		//envString.push_back("SCRIPT_NAME="); //seulement POST // search.py
-		//CONTENT_LENGTH //seulement si body(POST) //ok
-
-		//SERVER_PROTOCOL //HTTP/1.1
-		//SERVER_SOFTWARE //C++98?
-		//GATEWAY_INTERFACE//CGI/2.4?
-
-		//HTTP_*********** issus du header//??seb
-
-		//REMOTE_ADDR //pas oblige
-		//REMOTE_HOST //pas oblige
-		//REMOTE_PORT //pas oblige
-		//DOCUMENT_ROOT //pas oblige
-
-		// https://datatracker.ietf.org/doc/html/rfc3875  chapt 4.1
-
-
+		std::vector<std::string> envString = build_envString(req, config, i);
 		std::vector<char*>env;
 		for(size_t i = 0; i < envString.size(); i++)
 			env.push_back(const_cast<char*>(envString[i].c_str()));
 		env.push_back(NULL);
-
-//		std::cerr << "*** config.routes[i].root : " << config.routes[i].root << std::endl;
-
 		char *root = const_cast<char*>(config.routes[i].root.c_str());
-
 		char *args[] = {root, NULL};
-
+		
 		execve(root,args,env.data());
 		perror("execve");
 		_exit(1);
@@ -82,11 +92,24 @@ std::string execute_cgi(const webserv::http::Request& req, const ServerConfig& c
 
 	while((n = read(pipefd[0], buffer, sizeof(buffer))) > 0)
 		output.append(buffer,n);
-
 	close(pipefd[0]);
+	if (n < 0)
+		throw std::runtime_error("CGI read failed");
 
-	waitpid(pid, NULL, 0);
+	int status;
+	if(waitpid(pid, &status, 0) == -1)
+		throw std::runtime_error("CGI waitpid failed");
 
+    if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+	{
+        throw std::runtime_error("CGI exited whith code : " + libftpp::str::StringUtils::itos(WEXITSTATUS(status)));
+	}
+//	std::cerr << "status = " << status << std::endl;
+//	status = 1;
+    if (WIFSIGNALED(status))
+	{
+        throw std::runtime_error("CGI killed by signal : " + libftpp::str::StringUtils::itos(WTERMSIG(status)));
+	}
 	return(output);
 }
 
@@ -171,11 +194,14 @@ std::string webserv::http::Get::execute(const http::Request& req, const ServerCo
 	if (httpCode != 200) 
 		return ResponseBuilder::generateError(httpCode, config);
 
-	//   http://37.59.120.163:9003/search?query=webserv   //SDU
+	
+
+	//   http://37.59.120.163:9003/search?query=webserv/results   //SDU
 	// TODO RAPH: modif getSecurePath pour aller avec cgi
 	// remplir full path avec vrai path cgi et descendre le block en haut -> en bas
 	fullPath = _getSecurePath(config.root, req.getPath(), httpCode);//SDU : trop restrictif
 	//std::cerr << "fullPath = " <<  fullPath << " code = " << httpCode << std::endl;
+
 	struct stat s;
 	if (stat(fullPath.c_str(), &s) == 0 && (s.st_mode & S_IFDIR)) {
 		if (!_checkIndexFile(fullPath, httpCode, config)) {
@@ -184,13 +210,14 @@ std::string webserv::http::Get::execute(const http::Request& req, const ServerCo
 			return ResponseBuilder::generateError(httpCode, config);
 		}
 	}
-	
-	if (access(fullPath.c_str(), R_OK) != 0)
-	{
-		return ResponseBuilder::generateError(403, config);
-	}
+
+//	if (access(fullPath.c_str(), R_OK) != 0)
+//	{
+//		return ResponseBuilder::generateError(403, config);
+//	}
 		for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou il faut le positionner
 		{
+//			std::cout << "req.getPath() = " << req.getPath() << "   config.routes[i].path = " << config.routes[i].path << std::endl;
 			if(req.getPath() == config.routes[i].path)
 			{
 				std::cout << "===== ici = "<< req.getPath() << std::endl;

@@ -21,6 +21,11 @@
 #define ERROR_CODE_MIN 400 //100-400 pour les code non error
 #define ERROR_CODE_MAX 599
 
+namespace ServerInfo
+{
+	const std::string SERVER_SOFTWARE = "webserv/1.0";
+	const std::string GATEWAY_INTERFACE = "CGI/1.1";
+}
 
 
 enum ParseState

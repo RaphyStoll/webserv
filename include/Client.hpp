@@ -1,9 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "libftpp.hpp"
 #include "ConfigParser.hpp"
 #include "RequestParser.hpp"
+#include "libftpp.hpp"
 #include <string>
 
 namespace webserv {
@@ -20,7 +20,11 @@ public:
   // Getters
   int getFd() const;
   webserv::http::RequestParser &getParser();
-  std::string &getResponseBuffer();
+  libftpp::Buffer::Buffer &getResponseBuffer();
+  int getFileFd() const;
+  void setFileFd(int fd);
+  bool isChunked() const;
+  void setChunked(bool chunked);
 
   // Gestion du Timeout
   void updateLastActivity();
@@ -33,11 +37,13 @@ public:
   void clearResponseBuffer();
 
 private:
-	mutable libftpp::debug::DebugLogger _logger;
-	int _fd;
-	webserv::http::RequestParser _parser;
-	libftpp::time::Timeout _last_activity;
-	std::string _response_buffer;
+  mutable libftpp::debug::DebugLogger _logger;
+  int _fd;
+  int _fileFd;
+  bool _isChunked;
+  webserv::http::RequestParser _parser;
+  libftpp::time::Timeout _last_activity;
+  libftpp::Buffer::Buffer _response_buffer;
 };
 
 } // namespace core

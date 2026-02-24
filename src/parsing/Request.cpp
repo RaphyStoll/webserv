@@ -1,13 +1,13 @@
 #include "Request.hpp"
 #include "../include/StringUtils.hpp"
-#include <iostream>
 #include "libftpp.hpp"
-
+#include <iostream>
 
 using namespace webserv::http;
 
 Request::Request()
-	: _logger_request("request") ,_method(""), _path(""), _queryString(""), _httpVersion(""), _body("") {}
+    : _logger_request("request"), _method(""), _path(""), _queryString(""),
+      _httpVersion(""), _body("") {}
 
 Request::~Request() {}
 
@@ -19,13 +19,12 @@ std::string Request::getBody() const { return _body; }
 std::string Request::getContentLength() const { return _contentLength; };
 std::string Request::getContentType() const { return _contentType; };
 
-std::string Request::getHeader(const std::string &name) const
-{
-	std::map<std::string, std::string>::const_iterator it =
-		_headers.find(libftpp::str::StringUtils::toLower(name));
-	if (it != _headers.end())
-		return it->second;
-	return "";
+std::string Request::getHeader(const std::string &name) const {
+  std::map<std::string, std::string>::const_iterator it =
+      _headers.find(libftpp::str::StringUtils::toLower(name));
+  if (it != _headers.end())
+    return it->second;
+  return "";
 }
 
 size_t Request::getBodySize() const { return _body.size(); }
@@ -34,52 +33,49 @@ void Request::setMethod(const std::string &method) { _method = method; }
 void Request::setPath(const std::string &path) { _path = path; }
 void Request::setQueryString(const std::string &query) { _queryString = query; }
 void Request::setBody(const std::string &body) { _body = body; }
-void Request::setContentLength(const std::string &content_l) { _contentLength = content_l; }
-void Request::setContentType(const std::string &content_t) { _contentType = content_t; }
-
-void Request::setHttpVersion(const std::string &version)
-{
-	_httpVersion = version;
+void Request::setContentLength(const std::string &content_l) {
+  _contentLength = content_l;
+}
+void Request::setContentType(const std::string &content_t) {
+  _contentType = content_t;
 }
 
-void Request::setHeader(const std::string &name, const std::string &value)
-{
-	std::string lower = libftpp::str::StringUtils::toLower(name);
-	if (lower == "content-length")
-	{
-		_headers[lower] = value;
-		return;
-	}
-
-	std::map<std::string, std::string>::iterator it = _headers.find(lower);
-	if (it == _headers.end())
-	{
-		_headers[lower] = value;
-		return;
-	}
-
-	if (!it->second.empty() && !value.empty())
-		it->second += ", " + value;
-	else
-		it->second += value;
+void Request::setHttpVersion(const std::string &version) {
+  _httpVersion = version;
 }
 
-	void Request::appendBody(const std::string &data) { _body.append(data); }
+void Request::setHeader(const std::string &name, const std::string &value) {
+  std::string lower = libftpp::str::StringUtils::toLower(name);
+  if (lower == "content-length") {
+    _headers[lower] = value;
+    return;
+  }
 
-		void Request::print(void) const
-	{
-		_logger_request << "Request : " << std::endl;
-        _logger_request << "  _method : " << _method << std::endl;
-        _logger_request << "  _path : " << _path << std::endl;
-        _logger_request << "  _queryString : " << _queryString << std::endl;
-        _logger_request << "  _httpVersion : " << _httpVersion << std::endl;
-		_logger_request << "  _body : " << _body << std::endl;
-/*
-        std::cout << "  methods : ";
-        for(size_t i = 0 ; i < methods.size(); i++)
-            std::cout << methods[i] << " ";
-        std::cout << std::endl;
-*/
+  std::map<std::string, std::string>::iterator it = _headers.find(lower);
+  if (it == _headers.end()) {
+    _headers[lower] = value;
+    return;
+  }
 
+  if (!it->second.empty() && !value.empty())
+    it->second += ", " + value;
+  else
+    it->second += value;
+}
 
- 	}
+void Request::appendBody(const std::string &data) { _body.append(data); }
+
+void Request::print(void) const {
+  _logger_request << "Request : " << std::endl;
+  _logger_request << "  _method : " << _method << std::endl;
+  _logger_request << "  _path : " << _path << std::endl;
+  _logger_request << "  _queryString : " << _queryString << std::endl;
+  _logger_request << "  _httpVersion : " << _httpVersion << std::endl;
+  _logger_request << "  _body : " << _body << std::endl;
+  /*
+          std::cout << "  methods : ";
+          for(size_t i = 0 ; i < methods.size(); i++)
+              std::cout << methods[i] << " ";
+          std::cout << std::endl;
+  */
+}

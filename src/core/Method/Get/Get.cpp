@@ -2,11 +2,16 @@
 #include <sstream>
 #include <climits>
 #include <cstdlib>
+#include <sys/dirent.h>
 #include <vector>
+#include <ctime>
+#include <iomanip>
 
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
 #include "Get.hpp"
 #include "ResponseBuilder.hpp"
@@ -25,8 +30,8 @@ std::vector<std::string> build_envString(const webserv::http::Request& req, cons
 	envString.push_back("PATH_INFO="); // /results  est ce que ca doit etre parse avant ou ici?
 	envString.push_back("SERVER_NAME=" + config.server_name); // OK VPS_SDU_9003
 	envString.push_back("SERVER_PORT=" + libftpp::str::StringUtils::itos(config.port)); // OK 9003
-	envString.push_back("CONTENT_TYPE=" + req.getContentType()); // Cela provient du navigateur, c est le type exact des données envoyées dans le body HTTP. exemple : text/plain, application/json, application/x-www-form-urlencoded
-	envString.push_back("CONTENT_LENGTH=" + req.getContentLength());  // Cela provient du navigateur, c est la taille du body
+	envString.push_back("CONTENT_TYPE=" + req.getContentType()); // Cela provient du navigateur, c est le type exact des données envoyées dans le body HTTP. exemple : text/plain, application/json, application/x-www-form-urlencoded --> SC Normal que vide car get
+	envString.push_back("CONTENT_LENGTH=" + req.getContentLength());  // Cela provient du navigateur, c est la taille du body --> SC Normal que vide car get
 	envString.push_back("SCRIPT_NAME=" + config.routes[i].root); // OK seulement POST // cgi/search.py
 	envString.push_back("SERVER_PROTOCOL=" + req.getHttpVersion()); //OK HTTP/1.1 // Cela provient du navigateur et n a rien a voir avec ce que renvoie la requete python ou query
 	envString.push_back("SERVER_SOFTWARE=" + ServerInfo::SERVER_SOFTWARE); // OK webserv/1.0
@@ -126,10 +131,10 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 	(void)httpCode; // FIXME : pas use pour l'instant mais comme la fontion n'est pas fini je le laisse
 
 	std::string effectiveRoute = webserv::http::RouteMatcher::getEffectiveRoot(config, route);
-	
+
 	std::string reqPath = req.getPath();
 	std::string fullPath;
-	
+
 	if (reqPath.find(route.path) == 0) {
 		std::string suffix = reqPath.substr(route.path.length());
 		fullPath = libftpp::str::PathUtils::join(effectiveRoute, suffix);
@@ -151,7 +156,7 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 
 		// index et auto index
 	if (libftpp::str::PathUtils::isDirectory(fullPath)) {
-		
+
 		std::string indexName;
 		if (config.index.empty()) {
 			_logger << indexName << "= empty Fallback to index.htm" << std::endl;
@@ -168,9 +173,10 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 			fullPath = indexPath;
 		else {
 			if (route.directory_listing){
-				//TODO SEB: Autoindex 
-				return _logger << "===== AUTO INDEX =====" << std::endl,
-					"HTTP/1.1 200 OK\r\n\r\nAUTOINDEX TODO";
+				std::string htmlContent = _displayAutoIndex(fullPath, req.getPath());
+				if (htmlContent.empty())
+					return ResponseBuilder::generateError(500, config);
+				return _createSuccessResponse(htmlContent, "index.html");
 			}
 			return _logger << "no route.directory_listing for auto index" << std::endl,
 				ResponseBuilder::generateError(403, config);
@@ -179,8 +185,8 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 	if (route.cgi == true) {
         std::string ext = route.cgi_extension;
 
-        if (fullPath.length() >= ext.length() && 
-            fullPath.compare(fullPath.length() - ext.length(), ext.length(), ext) == 0) 
+        if (fullPath.length() >= ext.length() &&
+            fullPath.compare(fullPath.length() - ext.length(), ext.length(), ext) == 0)
         {
 			_logger << "=====  CGI (GET)  =====" << std::endl;
 			_logger << "cgi = "<< req.getPath() << std::endl;
@@ -191,13 +197,13 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 	 			if(req.getPath() == config.routes[i].path)
 	 			{
 					fullPath = "cgi.html";
-					 
+
 					output = execute_cgi(req, config, i);
 					_logger << "output = " << output << std::endl;
 					return _createSuccessResponse(effectiveRoute, fullPath);
 				}
 			}
-					
+
 			//partie cgi
 			// pas reussi a inclure la fonction actuel je pense elle devrait avoir besoin
 			// de ces 4 info pour fonctionner ou en tout cas avec ces 4 la t'as tout en cas de besoin
@@ -232,7 +238,7 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 // 	std::string content = "";
 // 	std::string fullPath = "";
 
-// 	if (httpCode != 200) 
+// 	if (httpCode != 200)
 // 		return ResponseBuilder::generateError(httpCode, config);
 
 // 	//   http://37.59.120.163:9003/search?query=webserv   //SDU
@@ -258,7 +264,7 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 // 			return ResponseBuilder::generateError(httpCode, config);
 // 		}
 // 	}
-	
+
 // 	if (access(fullPath.c_str(), R_OK) != 0)
 // 	{
 // 		return ResponseBuilder::generateError(403, config);
@@ -266,6 +272,43 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 // 	content = _readFile(fullPath);
 // 	if (content.empty() && s.st_size > 0)
 // 		return ResponseBuilder::generateError(500, config);
-	
+
 // 	return _createSuccessResponse(content, fullPath);
 // }
+
+std::string webserv::http::Get::_displayAutoIndex(const std::string &path, const std::string &requestPath)
+{
+	DIR *dir = opendir(path.c_str());
+	if (!dir)
+		return ""; // error 500
+
+	std::ostringstream html;
+	html << "<html><head><title>Index of " << requestPath << "</title></head>\n";
+	html << "<body><h1>Index of " << requestPath << "</h1>\n";
+	html << "<hr><pre>\n";
+
+	if (requestPath != "/")
+		html << "<a href=\"../\">..</a>\n";
+
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string name = entry->d_name;
+		if (name == "." || name == "..")
+			continue;
+
+		std::string fullPath = path + "/" + name;
+		struct stat st;
+		stat(fullPath.c_str(), &st);
+
+		if (S_ISDIR(st.st_mode))
+			name += "/";
+
+		html << "<a href=\"" << name << "\">" << name << "</a>";
+		// todo check for more infos
+		html << "\n";
+	}
+	closedir(dir);
+	html << "</pre><hr></body></html>";
+	return html.str();
+}

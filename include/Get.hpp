@@ -28,6 +28,9 @@ namespace webserv {
 			// helper
 			static std::string _readFile(const std::string& path);
 			static std::string _getContentType(const std::string& path);
+
+			// auto index
+			static std::string _displayAutoIndex(const std::string &dir, const std::string &requestPath);
 		};
 
 	} // namespace http

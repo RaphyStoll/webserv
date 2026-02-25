@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/opt/homebrew/bin/php
 <?php
 // Simple PHP CGI Script for Demo
 // Ensure this script is executable (chmod +x hello.php)

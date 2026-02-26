@@ -1,7 +1,19 @@
 #include "RequestParser.hpp"
+#include <cstddef>
 #include <cstdlib>
+#include <sstream>
+#include <sys/_types/_ssize_t.h>
+#include <sys/fcntl.h>
+#include <unistd.h>
+#include <ctime>
+#include <unistd.h>
+#include <fcntl.h>
+#include <climits>
+#include <cerrno>
 
 using namespace webserv::http;
+
+unsigned int RequestParser::_tmpFileCounter = 0;
 
 RequestParser::State RequestParser::_determineBodyParsing()
 {
@@ -87,6 +99,16 @@ RequestParser::State RequestParser::_parseChunkedBody()
 			if (semicolon != std::string::npos)
 				sizeLine = sizeLine.substr(0, semicolon);
 
+			libftpp::str::StringUtils::trim(sizeLine);
+
+			if (sizeLine.empty()) {
+				_errorCode = 400;
+				_cleanupTmpFile();
+				return ERROR;
+			}
+
+
+
 			char *end;
 			_currentChunkSize = std::strtoul(sizeLine.c_str(), &end, 16);
 			if (*end != '\0' && !std::isspace(*end))
@@ -100,6 +122,16 @@ RequestParser::State RequestParser::_parseChunkedBody()
 				_state =
 					PARSING_TRAILER; // dernier chunk du coup on lit les CRLF trailer
 				continue;
+			}
+
+			_state = PARSING_CHUNK_DATA;
+			_chunkBytesRemaining = _currentChunkSize;
+		}
+
+		if (_currentChunkSize > 0) {
+			if (_request.getBodySize() + _currentChunkSize > _maxBodySize) {
+				_errorCode = 413;
+				return ERROR;
 			}
 
 			_state = PARSING_CHUNK_DATA;
@@ -123,6 +155,25 @@ RequestParser::State RequestParser::_parseChunkedBody()
 				_errorCode = 413;
 				return ERROR;
 			}
+
+			if (_request.getBodySize() > _bodyThreshhold && !_usingTmpFile) {
+				char tmpPath[] = "/tmp/webserv_body_tmp";
+				_bodyTmpFd = mkstemp(tmpPath);
+				if (_bodyTmpFd == -1) {
+					_errorCode = 500;
+					return ERROR;
+				}
+				_bodyTmpPath = tmpPath;
+				_usingTmpFile = true;
+
+				write(_bodyTmpFd, _request.getBody().c_str(), _request.getBodySize());
+				_request.setBody("");
+			}
+
+			if (_usingTmpFile)
+				write(_bodyTmpFd, _buffer.c_str(), toRead);
+			else
+				_request.appendBody(_buffer.substr(0, toRead));
 
 			if (_chunkBytesRemaining == 0)
 			{
@@ -153,5 +204,48 @@ RequestParser::State RequestParser::_parseChunkedBody()
 			}
 			_buffer.erase(0, lineEnd + 2);
 		}
+	}
+}
+
+std::string RequestParser::_generateTmpPath(){
+	std::ostringstream os;
+	os << "/tmp/webserv_body_" << getpid() << "_" << _tmpFileCounter << std::time(NULL);
+	return os.str();
+}
+
+bool RequestParser::_initTmpFile(){
+	_bodyTmpPath = _generateTmpPath();
+	_bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
+	if (_bodyTmpFd < 0) {
+		_bodyTmpPath = _generateTmpPath();
+		_bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
+		if (_bodyTmpFd < 0)
+			return false;
+	}
+	_usingTmpFile = true;
+
+	if (_request.getBodySize() > 0) {
+		const std::string &existingBody = _request.getBody();
+		ssize_t written = write(_bodyTmpFd, existingBody.c_str(), existingBody.size());
+		if (written < 0 || static_cast<size_t>(written) != existingBody.size()) {
+			_cleanupTmpFile();
+			return false;
+		}
+		_request.setBody("");
+	}
+	return true;
+}
+
+void RequestParser::_cleanupTmpFile(){
+	if (_usingTmpFile) {
+		if (_bodyTmpFd >= 0) {
+			close(_bodyTmpFd);
+			_bodyTmpFd = -1;
+		}
+		if (!_bodyTmpPath.empty()) {
+			unlink(_bodyTmpPath.c_str());
+			_bodyTmpPath.clear();
+		}
+		_usingTmpFile = false;
 	}
 }

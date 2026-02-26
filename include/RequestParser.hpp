@@ -61,6 +61,12 @@ namespace webserv
 			bool _hasTransferEncoding;
 			size_t _headerCount;
 
+			int _bodyTmpFd;
+			std::string _bodyTmpPath;
+			bool _usingTmpFile;
+			static const size_t BODY_TMP_THRESHHOLD = 1048576;
+			static unsigned int _tmpFileCounter;
+
 			const NetworkConfig* _config;
 			bool _configResolved;
 
@@ -80,6 +86,9 @@ namespace webserv
 			bool _parseContentLengthHeader(const std::string &value);
 			bool _parseTransferEncodingHeader(const std::string &value);
 			void _resolveConfigLimits();
+			bool _initTmpFile();
+			void _cleanupTmpFile();
+			std::string _generateTmpPath();
 		};
 	} // namespace http
 } // namespace webserv

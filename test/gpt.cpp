@@ -57,7 +57,8 @@ int main() {
 			"Connection: close\r\n"
 			"\r\n" + body;
 
-		send(client_fd, resp.c_str(), resp.size(), 0);
+		::send(client_fd, resp.c_str(), resp.size(), 0);
+		//TODO RAPH: check return send
 		close(client_fd);
 	}
 	return 0;

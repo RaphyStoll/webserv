@@ -91,24 +91,24 @@ void RequestParser::reset()
 	_request = Request();
 }
 
-void RequestParser::_resolveConfigLimits(){
-	// if (_configResolved || _config == NULL)
-	// 	return; 
+// void RequestParser::_resolveConfigLimits(){
+// 	if (_configResolved || _config == NULL)
+// 		return;
 
-	// _configResolved = true;
+// 	_configResolved = true;
 
-	// std::string host = _request.getHeader("Host");
-	// if (host.empty())
-	// 	return;
+// 	std::string host = _request.getHeader("Host");
+// 	if (host.empty())
+// 		return;
 
-	// size_t colonPos = host.find(':');
-	// std::string hostName = (colonPos != std::string::npos) ? host.substr(0, colonPos) : host;
-	// int hostPort = 0;
-	// if (colonPos != std::string::npos)
-	// {
-	// 	std::string portStr = host.substr(colonPos + 1);
-	// 	hostPort = std::atoi(portStr.c_str());
-	// }
+// 	size_t colonPos = host.find(':');
+// 	std::string hostName = (colonPos != std::string::npos) ? host.substr(0, colonPos) : host;
+// 	int hostPort = 0;
+// 	if (colonPos != std::string::npos)
+// 	{
+// 		std::string portStr = host.substr(colonPos + 1);
+// 		hostPort = std::atoi(portStr.c_str());
+// 	}
 
 	// for (NetworkConfig::const_iterator portIt = _config->begin(); portIt != _config->end(); ++portIt)
 	// {
@@ -130,4 +130,4 @@ void RequestParser::_resolveConfigLimits(){
 	// 		return;
 	// 	}
 	// }
-}
+//}

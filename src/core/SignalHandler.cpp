@@ -44,7 +44,8 @@ namespace webserv
 		(void)signum;
 		// Write pour async
 		const char msg[] = "\n[SignalHandler] Shutdown signal received, cleaning up...\n";
-		write(STDOUT_FILENO, msg, sizeof(msg) - 1);
+		ssize_t n = write(STDOUT_FILENO, msg, sizeof(msg) - 1);
+		//TODO SEB: check return of write
 		_running = 0;
 	}
 }

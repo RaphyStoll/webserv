@@ -27,8 +27,85 @@ void webserv::core::EventLoop::_handle_poll_events() {
         _clients.find(fd);
     bool is_known_client = (it_client != _clients.end());
 
+    std::map<int, webserv::core::Client *>::iterator it_cgi = _cgiFds.find(fd);
+    bool is_cgi_fd = (it_cgi != _cgiFds.end());
+
     if (is_known_client) {
       it_client->second.updateLastActivity();
+    } else if (is_cgi_fd) {
+      it_cgi->second->updateLastActivity();
+    }
+
+    if (is_cgi_fd) {
+      webserv::core::Client *client = it_cgi->second;
+      webserv::core::Cgi &cgi = client->getCgi();
+
+      if ((revents & POLLIN) && fd == cgi.getPipeOutReadFd()) {
+        char buf[8192];
+        ssize_t n = read(fd, buf, sizeof(buf));
+        if (n > 0) {
+          client->appendResponse(std::string(buf, n));
+          for (size_t k = 0; k < _poll_fds.size(); ++k) {
+            if (_poll_fds[k].fd == client->getFd()) {
+              _poll_fds[k].events |= POLLOUT;
+              break;
+            }
+          }
+        } else if (n == 0) {
+          cgi.reset();
+          client->setExecutingCgi(false);
+          _cgiFds.erase(fd);
+          _poll_fds.erase(_poll_fds.begin() + i);
+          i--;
+          for (size_t k = 0; k < _poll_fds.size(); ++k) {
+            if (_poll_fds[k].fd == client->getFd()) {
+              _poll_fds[k].events |= POLLOUT;
+              break;
+            }
+          }
+          continue;
+        } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+          _logger << "[EventLoop] CGI read error: " << std::strerror(errno)
+                  << std::endl;
+        }
+      }
+
+      if ((revents & POLLOUT) && fd == cgi.getPipeInWriteFd()) {
+        const std::string &body = client->getParser().getRequest().getBody();
+        size_t written = cgi.getBodyBytesWritten();
+
+        if (written < body.size()) {
+          ssize_t n = write(fd, body.c_str() + written, body.size() - written);
+          if (n > 0) {
+            cgi.addBodyBytesWritten(n);
+          } else if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            _logger << "[EventLoop] CGI write error: " << std::strerror(errno)
+                    << std::endl;
+          }
+        }
+        if (cgi.getBodyBytesWritten() >= body.size()) {
+          cgi.closePipeInWriteFd();
+          _cgiFds.erase(fd);
+          _poll_fds.erase(_poll_fds.begin() + i);
+          i--;
+        }
+        continue;
+      }
+
+      if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        cgi.reset();
+        client->setExecutingCgi(false);
+        _cgiFds.erase(fd);
+        _poll_fds.erase(_poll_fds.begin() + i);
+        i--;
+        for (size_t k = 0; k < _poll_fds.size(); ++k) {
+          if (_poll_fds[k].fd == client->getFd()) {
+            _poll_fds[k].events |= POLLOUT;
+            break;
+          }
+        }
+      }
+      continue;
     }
 
     if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
@@ -113,12 +190,20 @@ void webserv::core::EventLoop::_handle_poll_events() {
         }
 
         if (respBuffer.empty() && client.getFileFd() == -1) {
-          _poll_fds[i].events = POLLIN;
+          if (!client.isExecutingCgi()) {
+            _poll_fds[i].events = POLLIN;
 
-          _logger << "[EventLoop] Response sent fully to " << fd << std::endl;
-          _close_connection(fd, i);
-          i--;
-          continue;
+            _logger << "[EventLoop] Response sent fully to " << fd << std::endl;
+            _close_connection(fd, i);
+            i--;
+            continue;
+          } else {
+            // Si on est en train d'exécuter un CGI mais qu'on a fini d'envoyer
+            // le buffer actuel, on arrête de surveiller POLLOUT pour ce client
+            // afin de ne pas boucler à 100% CPU. On le réactivera quand le CGI
+            // nous enverra de nouvelles données !
+            _poll_fds[i].events = POLLIN;
+          }
         }
       }
     }

@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "Cgi.hpp"
 #include "ConfigParser.hpp"
 #include "RequestParser.hpp"
 #include "libftpp.hpp"
@@ -26,6 +27,11 @@ public:
   bool isChunked() const;
   void setChunked(bool chunked);
 
+  // Gestion CGI
+  webserv::core::Cgi &getCgi();
+  bool isExecutingCgi() const;
+  void setExecutingCgi(bool isExecuting);
+
   // Gestion du Timeout
   void updateLastActivity();
   bool hasTimedOut(unsigned long long now_ms,
@@ -41,6 +47,8 @@ private:
   int _fd;
   int _fileFd;
   bool _isChunked;
+  bool _isExecutingCgi;
+  webserv::core::Cgi _cgi;
   webserv::http::RequestParser _parser;
   libftpp::time::Timeout _last_activity;
   libftpp::Buffer::Buffer _response_buffer;

@@ -57,7 +57,35 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd,
       std::string responseData =
           webserv::http::ResponseBuilder::build(req, srvConfig, client);
 
-      if (!responseData.empty()) {
+      if (client.isExecutingCgi()) {
+        _logger << "[EventLoop] CGI started on fd " << client_fd
+                << ", registering pipes" << std::endl;
+        int pipeOut = client.getCgi().getPipeOutReadFd();
+        if (pipeOut != -1) {
+          struct pollfd pfd;
+          pfd.fd = pipeOut;
+          pfd.events = POLLIN;
+          pfd.revents = 0;
+          _poll_fds.push_back(pfd);
+          _cgiFds[pipeOut] = &client;
+        }
+
+        int pipeIn = client.getCgi().getPipeInWriteFd();
+        if (pipeIn != -1) {
+          struct pollfd pfd2;
+          pfd2.fd = pipeIn;
+          pfd2.events = POLLOUT;
+          pfd2.revents = 0;
+          _poll_fds.push_back(pfd2);
+          _cgiFds[pipeIn] = &client;
+        }
+
+        // Initial Headers to support streaming. Connection: close is crucial
+        // to signal EOF to the browser after CGI stream ends without
+        // Content-Length.
+        client.appendResponse("HTTP/1.1 200 OK\r\nConnection: close\r\n");
+        _poll_fds[poll_index].events = POLLIN | POLLOUT;
+      } else if (!responseData.empty()) {
         client.appendResponse(responseData);
         _poll_fds[poll_index].events = POLLIN | POLLOUT;
       }

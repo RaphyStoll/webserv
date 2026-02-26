@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/php
+#!/usr/bin/env php
 <?php
 // Script CGI pour récupérer les X dernières lignes de logs
 echo "Content-Type: text/plain\r\n\r\n";

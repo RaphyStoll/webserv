@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/php
+#!/usr/bin/env php
 <?php
 // Script CGI pour lister les fichiers du dossier /upload
 echo "Content-Type: application/json\r\n\r\n";

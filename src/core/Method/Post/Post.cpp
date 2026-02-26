@@ -56,8 +56,12 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
       _logger << "=====  CGI (POST)  =====" << std::endl;
       _logger << "cgi = " << req.getPath() << std::endl;
 
-      return _logger << "TODO RAPH : CGI POST not fully hooked up" << std::endl,
-             ResponseBuilder::generateError(501, config);
+      if (client.getCgi().run(req, config, route)) {
+        client.setExecutingCgi(true);
+        return "";
+      } else {
+        return ResponseBuilder::generateError(500, config);
+      }
     }
   }
 

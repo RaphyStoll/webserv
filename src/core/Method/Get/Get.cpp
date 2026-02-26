@@ -16,127 +16,6 @@
 
 using namespace webserv::http;
 
-std::vector<std::string> build_envString(const webserv::http::Request &req,
-                                         const ServerConfig &config, size_t i) {
-  std::vector<std::string> envString;
-
-  envString.push_back("REQUEST_METHOD=" + req.getMethod()); // OK GET
-  envString.push_back(
-      "QUERY_STRING=" +
-      req.getQueryString()); // query=webserv KO trop long si path_info
-  envString.push_back(
-      "PATH_INFO="); // /results  est ce que ca doit etre parse avant ou ici?
-  envString.push_back("SERVER_NAME=" + config.server_name); // OK VPS_SDU_9003
-  envString.push_back("SERVER_PORT=" +
-                      libftpp::str::StringUtils::itos(config.port)); // OK 9003
-  envString.push_back(
-      "CONTENT_TYPE=" +
-      req.getContentType()); // Cela provient du navigateur, c est le type exact
-                             // des données envoyées dans le body HTTP. exemple
-                             // : text/plain, application/json,
-                             // application/x-www-form-urlencoded
-  envString.push_back("CONTENT_LENGTH=" +
-                      req.getContentLength()); // Cela provient du navigateur, c
-                                               // est la taille du body
-  envString.push_back(
-      "SCRIPT_NAME=" +
-      config.routes[i].root); // OK seulement POST // cgi/search.py
-  envString.push_back(
-      "SERVER_PROTOCOL=" +
-      req.getHttpVersion()); // OK HTTP/1.1 // Cela provient du navigateur et n
-                             // a rien a voir avec ce que renvoie la requete
-                             // python ou query
-  envString.push_back("SERVER_SOFTWARE=" +
-                      ServerInfo::SERVER_SOFTWARE); // OK webserv/1.0
-  envString.push_back("GATEWAY_INTERFACE=" +
-                      ServerInfo::GATEWAY_INTERFACE); // OK CGI/1.1
-
-  // HTTP_*********** issus du header//??seb
-  //  https://datatracker.ietf.org/doc/html/rfc3875  chapt 4.1
-
-  std::cerr << "req.getContentType() = " << req.getContentType() << std::endl;
-  std::cerr << "req.getContentLength() = " << req.getContentLength()
-            << std::endl;
-
-  return (envString);
-}
-
-std::string execute_cgi(const webserv::http::Request &req,
-                        const ServerConfig &config, size_t i) {
-  libftpp::debug::DebugLogger _logger("cgi");
-  _logger << std::endl << "on est dans CGI" << std::endl << std::endl;
-  //	req.print();
-  //	config.print();
-  //   http://37.59.120.163:9003/search?query=webserv/results   //SDU
-  //   http://37.59.120.163:9003//cgi-bin/search.py/results   //SDU
-
-  int pipefd[2];
-  if (pipe(pipefd) == -1)
-    throw std::runtime_error("CGI pipe failed");
-
-  pid_t pid = fork();
-
-  if (pid < 0) {
-    close(pipefd[0]);
-    close(pipefd[1]);
-    throw std::runtime_error("CGI fork failed");
-  }
-
-  if (pid == 0) // fils
-  {
-    close(pipefd[0]);
-    if (dup2(pipefd[1], STDOUT_FILENO) == -1) {
-      close(pipefd[1]);
-      _exit(1);
-    }
-    close(pipefd[1]);
-
-    std::vector<std::string> envString = build_envString(req, config, i);
-    std::vector<char *> env;
-    for (size_t i = 0; i < envString.size(); i++)
-      env.push_back(const_cast<char *>(envString[i].c_str()));
-    env.push_back(NULL);
-    char *root = const_cast<char *>(config.routes[i].root.c_str());
-    char *args[] = {root, NULL};
-
-    _logger << "[child] " << root << args << env.data() << std::endl;
-    execve(root, args, env.data());
-    _logger << "[child] execve error" << std::endl;
-    perror("execve");
-    _exit(1);
-  }
-
-  // parent
-  close(pipefd[1]);
-
-  std::string output;
-  char buffer[1024];
-  ssize_t n;
-
-  while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-    output.append(buffer, n);
-  close(pipefd[0]);
-  if (n < 0)
-    throw std::runtime_error("CGI read failed");
-
-  int status;
-  if (waitpid(pid, &status, 0) == -1)
-    throw std::runtime_error("CGI waitpid failed");
-
-  if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-    throw std::runtime_error(
-        "CGI exited whith code : " +
-        libftpp::str::StringUtils::itos(WEXITSTATUS(status)));
-  }
-  //	std::cerr << "status = " << status << std::endl;
-  //	status = 1;
-  if (WIFSIGNALED(status)) {
-    throw std::runtime_error("CGI killed by signal : " +
-                             libftpp::str::StringUtils::itos(WTERMSIG(status)));
-  }
-  return (output);
-}
-
 std::string webserv::http::Get::execute(const webserv::http::Request &req,
                                         const ServerConfig &config,
                                         const RouteConfig &route,
@@ -209,34 +88,12 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
       _logger << "=====  CGI (GET)  =====" << std::endl;
       _logger << "cgi = " << req.getPath() << std::endl;
 
-      std::string output;
-      for (size_t i = 0; i < config.routes.size();
-           i++) // SDU CGI, verifier ou il faut le positionner
-      {
-        if (req.getPath() == config.routes[i].path) {
-          fullPath = "cgi.html";
-
-          // TODO RAPH: Au lieu d'attendre la fin du CGI et d'allouer une
-          // std::string gigantesque, Seb devra modifier ça pour que le CGI
-          // retourne le fd de lecture du pipe et non pas bloquer. int
-          // pipe_read_fd = execute_cgi_async(req, config, i);
-          // client.setFileFd(pipe_read_fd);
-          // client.setChunked(true);
-          // return _createChunkedHeaders();
-
-          output = execute_cgi(req, config, i);
-          _logger << "output = " << output << std::endl;
-          return _createSuccessResponse(effectiveRoute, fullPath);
-        }
+      if (client.getCgi().run(req, config, route)) {
+        client.setExecutingCgi(true);
+        return "";
+      } else {
+        return ResponseBuilder::generateError(500, config);
       }
-
-      // partie cgi
-      //  pas reussi a inclure la fonction actuel je pense elle devrait avoir
-      //  besoin de ces 4 info pour fonctionner ou en tout cas avec ces 4 la
-      //  t'as tout en cas de besoin
-      // return execute_cgi(req, fullPath, config, route);
-      return _logger << "output = " << output << std::endl,
-             "HTTP/1.1 200 OK\r\n\r\n CG1§§§8I"; // <--- coucou de mon chat
     }
   }
   if (access(fullPath.c_str(), R_OK) != 0) {

@@ -11,14 +11,14 @@ using namespace webserv;
 
 webserv::core::Client::Client(int fd)
     : _logger("client"), _fd(fd), _fileFd(-1), _isChunked(false),
-      _last_activity(NEW_CONNECTION_TIMEOUT) {
+      _isExecutingCgi(false), _last_activity(NEW_CONNECTION_TIMEOUT) {
   //_logger << "New Client connection on fd: " << fd << std::endl;
   _last_activity.touch(libftpp::time::Clock::now_ms());
 }
 
 webserv::core::Client::Client()
     : _logger("client"), _fd(-1), _fileFd(-1), _isChunked(false),
-      _last_activity(NEW_CONNECTION_TIMEOUT) {
+      _isExecutingCgi(false), _last_activity(NEW_CONNECTION_TIMEOUT) {
   //_logger << "Default Client constructor" << std::endl;
 }
 
@@ -53,6 +53,12 @@ void webserv::core::Client::setFileFd(int fd) { _fileFd = fd; }
 bool webserv::core::Client::isChunked() const { return _isChunked; }
 
 void webserv::core::Client::setChunked(bool chunked) { _isChunked = chunked; }
+
+webserv::core::Cgi &webserv::core::Client::getCgi() { return _cgi; }
+bool webserv::core::Client::isExecutingCgi() const { return _isExecutingCgi; }
+void webserv::core::Client::setExecutingCgi(bool isExecuting) {
+  _isExecutingCgi = isExecuting;
+}
 
 // --- Gestion du Timeout ---
 
@@ -93,6 +99,8 @@ void webserv::core::Client::reset() {
   _logger << "Resetting client on fd: " << _fd << std::endl;
   _response_buffer.clear();
   _isChunked = false;
+  _isExecutingCgi = false;
+  _cgi.reset();
   if (_fileFd != -1) {
     close(_fileFd);
     _fileFd = -1;

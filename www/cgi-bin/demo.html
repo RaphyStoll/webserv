@@ -40,8 +40,11 @@
                     </form>
 
                     <button class="btn btn-warning" style="background:var(--warning-color); color:#fff; border:none;"
-                        onclick="runBonusCgi('/cgi-py/sysinfo.py')">🐍 Run Python (sysinfo.py)</button>
-                    <button class="btn" onclick="runBonusCgi('/cgi-sh/list_env.sh')">💻 Run Bash (list_env.sh)</button>
+                        onclick="runBonusCgi('/sysinfo')">🐍 Run Python (sysinfo.py)</button>
+                    <button class="btn" onclick="runBonusCgi('/list_env')">💻 Run Bash (list_env.sh)</button>
+                    <button class="btn btn-danger"
+                        style="background:#da3633; color:#fff; border:none; margin-left: auto;"
+                        onclick="runBonusCgi('/infinite')">🔥 TEST: Infinite Server Block</button>
                 </div>
             </div>
         </section>
@@ -50,6 +53,25 @@
         <div class="terminal" id="cgiLog" style="border-color: var(--warning-color);">Waiting for CGI execution...</div>
     </main>
 
+    <style>
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
     <script>
         document.getElementById('cgiForm').addEventListener('submit', function (e) {
             e.preventDefault();
@@ -57,17 +79,26 @@
             runBonusCgi(`/hello?name=${encodeURIComponent(val)}`);
         });
 
-        function runBonusCgi(path) {
+        async function runBonusCgi(path) {
             const term = document.getElementById('cgiLog');
-            term.innerText = `[HOST] Executing GET ${path}...\n`;
+            term.innerHTML = `<span class="loader"></span>[HOST] Executing GET ${path}...\n<span style="color:var(--text-muted); font-size:0.9em;">(En attente des données du serveur...)</span>\n`;
 
-            fetch(path)
-                .then(r => {
-                    term.innerText += `[CGI-WRAPPER] HTTP ${r.status}\n`;
-                    return r.text();
-                })
-                .then(text => term.innerText += `\n[--- OUTPUT ---]\n${text}`)
-                .catch(err => term.innerText += `\n[ERROR] Request Failed: ${err}`);
+            try {
+                const response = await fetch(path);
+                term.innerText = `[HOST] Executing GET ${path}...\n[CGI-WRAPPER] HTTP ${response.status}\n\n[--- OUTPUT ---]\n`;
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    term.innerText += decoder.decode(value, { stream: true });
+                }
+                term.innerText += "\n[--- END OF SCRIPT ---]";
+            } catch (err) {
+                term.innerText = `\n[ERROR] Request Failed / Interrompu: ${err}\n(Le navigateur a coupé la connexion ou le serveur a crashé)`;
+            }
         }
     </script>
 </body>

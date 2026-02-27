@@ -3,10 +3,13 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <ctime>
+#include <iomanip>
 
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include "Get.hpp"
 #include "Request.hpp"
@@ -162,3 +165,40 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
 
 // 	return _createSuccessResponse(content, fullPath);
 // }
+
+std::string webserv::http::Get::_displayAutoIndex(const std::string &path, const std::string &requestPath)
+{
+	DIR *dir = opendir(path.c_str());
+	if (!dir)
+		return ""; // error 500
+
+	std::ostringstream html;
+	html << "<html><head><title>Index of " << requestPath << "</title></head>\n";
+	html << "<body><h1>Index of " << requestPath << "</h1>\n";
+	html << "<hr><pre>\n";
+
+	if (requestPath != "/")
+		html << "<a href=\"../\">..</a>\n";
+
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string name = entry->d_name;
+		if (name == "." || name == "..")
+			continue;
+
+		std::string fullPath = path + "/" + name;
+		struct stat st;
+		stat(fullPath.c_str(), &st);
+
+		if (S_ISDIR(st.st_mode))
+			name += "/";
+
+		html << "<a href=\"" << name << "\">" << name << "</a>";
+		// todo check for more infos
+		html << "\n";
+	}
+	closedir(dir);
+	html << "</pre><hr></body></html>";
+	return html.str();
+}

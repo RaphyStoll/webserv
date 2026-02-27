@@ -32,10 +32,13 @@ private:
   static std::string _createSuccessResponse(const std::string &content,
                                             const std::string &path);
 
-  // helper
-  static std::string _readFile(const std::string &path);
-  static std::string _getContentType(const std::string &path);
-};
+			// helper
+			static std::string _readFile(const std::string& path);
+			static std::string _getContentType(const std::string& path);
+
+			// auto index
+			static std::string _displayAutoIndex(const std::string &dir, const std::string &requestPath);
+		};
 
 } // namespace http
 } // namespace webserv

@@ -3,11 +3,10 @@
 #include <iostream>
 #include "libftpp.hpp"
 
-
 using namespace webserv::http;
 
 Request::Request()
-	: _logger_request("request") ,_method(""), _path(""), _queryString(""), _httpVersion(""), _body("") {}
+	: _logger_request("request"), _method(""), _path(""), _queryString(""), _httpVersion(""), _body("") {}
 
 Request::~Request() {}
 
@@ -36,6 +35,7 @@ void Request::setQueryString(const std::string &query) { _queryString = query; }
 void Request::setBody(const std::string &body) { _body = body; }
 void Request::setContentLength(const std::string &content_l) { _contentLength = content_l; }
 void Request::setContentType(const std::string &content_t) { _contentType = content_t; }
+void Request::setBodyTmpPath(const std::string &path) { _bodyTmpPath = path; }
 
 void Request::setHttpVersion(const std::string &version)
 {
@@ -64,22 +64,20 @@ void Request::setHeader(const std::string &name, const std::string &value)
 		it->second += value;
 }
 
-	void Request::appendBody(const std::string &data) { _body.append(data); }
+void Request::appendBody(const std::string &data) { _body.append(data); }
 
-		void Request::print(void) const
-	{
-		_logger_request << "Request : " << std::endl;
-        _logger_request << "  _method : " << _method << std::endl;
-        _logger_request << "  _path : " << _path << std::endl;
-        _logger_request << "  _queryString : " << _queryString << std::endl;
-        _logger_request << "  _httpVersion : " << _httpVersion << std::endl;
-		_logger_request << "  _body : " << _body << std::endl;
-/*
-        std::cout << "  methods : ";
-        for(size_t i = 0 ; i < methods.size(); i++)
-            std::cout << methods[i] << " ";
-        std::cout << std::endl;
-*/
-
-
- 	}
+void Request::print(void) const
+{
+	_logger_request << "Request : " << std::endl;
+	_logger_request << "  _method : " << _method << std::endl;
+	_logger_request << "  _path : " << _path << std::endl;
+	_logger_request << "  _queryString : " << _queryString << std::endl;
+	_logger_request << "  _httpVersion : " << _httpVersion << std::endl;
+	_logger_request << "  _body : " << _body << std::endl;
+	/*
+			std::cout << "  methods : ";
+			for(size_t i = 0 ; i < methods.size(); i++)
+				std::cout << methods[i] << " ";
+			std::cout << std::endl;
+	*/
+}

@@ -23,6 +23,7 @@ namespace webserv
 			std::string _body;
 			std::string _contentLength;
 			std::string _contentType;
+			std::string _bodyTmpPath;
 
 		public:
 			Request();
@@ -36,6 +37,7 @@ namespace webserv
 			std::string getBody() const;
 			std::string getContentLength() const;
 			std::string getContentType() const;
+			std::string getBodyTmpPath() const { return _bodyTmpPath; }
 
 			void setMethod(const std::string &method);
 			void setPath(const std::string &path);
@@ -45,6 +47,7 @@ namespace webserv
 			void setBody(const std::string &body);
 			void setContentLength(const std::string &content_l);
 			void setContentType(const std::string &content_s);
+			void setBodyTmpPath(const std::string &path);
 
 			void appendBody(const std::string &data);
 			size_t getBodySize() const;
@@ -58,7 +61,9 @@ namespace webserv
 					return (connection == "keep-alive");
 			}
 
-			void print(void) const; //SDU
+			bool hasBodyTmpFile() const { return !_bodyTmpPath.empty(); }
+
+			void print(void) const; // SDU
 		};
 	} // namespace http
 }

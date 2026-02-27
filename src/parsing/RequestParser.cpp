@@ -8,11 +8,14 @@ RequestParser::RequestParser()
 	: _state(PARSING_REQUEST), _buffer(""), _errorCode(0), _contentLength(0),
 	  _maxBodySize(1048576), _bodyBytesRemaining(0), _currentChunkSize(0),
 	  _chunkBytesRemaining(0), _seenContentLength(false), _contentLengthHeaderValue(""),
-	  _hasTransferEncoding(false), _headerCount(0) {}
+	  _hasTransferEncoding(false), _headerCount(0), _bodyTmpFd(-1), _usingTmpFile(false) {}
 
-RequestParser::~RequestParser() {}
+RequestParser::~RequestParser()
+{
+	_cleanupTmpFile();
+}
 
-RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf) //SDU suppr namespace
+RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf) // SDU suppr namespace
 {
 	(void)conf;
 	if (_state == COMPLETE || _state == ERROR)
@@ -89,11 +92,14 @@ void RequestParser::reset()
 	_config = NULL;
 	_configResolved = false;
 	_request = Request();
+	_cleanupTmpFile();
+	_bodyTmpFd = -1;
 }
 
-void RequestParser::_resolveConfigLimits(){
+void RequestParser::_resolveConfigLimits()
+{
 	// if (_configResolved || _config == NULL)
-	// 	return; 
+	// 	return;
 
 	// _configResolved = true;
 

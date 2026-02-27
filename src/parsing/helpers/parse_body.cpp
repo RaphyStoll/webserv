@@ -1,9 +1,11 @@
 #include "RequestParser.hpp"
+#include <cctype>
 #include <cstddef>
 #include <cstdlib>
 #include <sstream>
 #include <sys/_types/_ssize_t.h>
 #include <sys/fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <ctime>
 #include <unistd.h>
@@ -72,13 +74,42 @@ RequestParser::State RequestParser::_parseBodyByLength()
 
 	if (toRead > 0)
 	{
-		_request.appendBody(_buffer.substr(0, toRead));
-		_buffer.erase(0, toRead); // todo replace by the compactBuffer
+		size_t totalSize = _request.getBodySize() + toRead;
+		if (totalSize > BODY_TMP_THRESHHOLD && !_usingTmpFile)
+		{
+			if (!_initTmpFile())
+			{
+				_errorCode = 500;
+				return ERROR;
+			}
+		}
+
+		if (_usingTmpFile)
+		{
+			ssize_t written = write(_bodyTmpFd, _buffer.c_str(), toRead);
+			if (written < 0 || static_cast<size_t>(written) != toRead)
+			{
+				_errorCode = 500;
+				_cleanupTmpFile();
+				return ERROR;
+			}
+		}
+		else
+			_request.appendBody(_buffer.substr(0, toRead));
+
+		_buffer.erase(0, toRead);
 		_bodyBytesRemaining -= toRead;
 	}
 
 	if (_bodyBytesRemaining == 0)
+	{
+		if (_usingTmpFile)
+		{
+			close(_bodyTmpFd);
+			_bodyTmpFd = -1;
+		}
 		_state = COMPLETE;
+	}
 	return _state;
 }
 
@@ -101,19 +132,46 @@ RequestParser::State RequestParser::_parseChunkedBody()
 
 			libftpp::str::StringUtils::trim(sizeLine);
 
-			if (sizeLine.empty()) {
+			if (sizeLine.empty())
+			{
 				_errorCode = 400;
 				_cleanupTmpFile();
 				return ERROR;
 			}
 
+			for (size_t i = 0; i < sizeLine.size(); ++i)
+			{
+				char c = sizeLine[i];
+				if (!std::isxdigit(static_cast<unsigned char>(c)))
+				{
+					_errorCode = 400;
+					_cleanupTmpFile();
+					return ERROR;
+				}
+			}
 
+			if (sizeLine.size() > 8)
+			{
+				_errorCode = 413;
+				_cleanupTmpFile();
+				return ERROR;
+			}
 
 			char *end;
+			errno = 0;
 			_currentChunkSize = std::strtoul(sizeLine.c_str(), &end, 16);
-			if (*end != '\0' && !std::isspace(*end))
+
+			if (errno == ERANGE || _currentChunkSize == ULONG_MAX)
 			{
-				_errorCode = 400;
+				_errorCode = 413;
+				_cleanupTmpFile();
+				return ERROR;
+			}
+
+			if (_currentChunkSize > _maxBodySize || _request.getBodySize() + _currentChunkSize > _maxBodySize)
+			{
+				_errorCode = 413;
+				_cleanupTmpFile();
 				return ERROR;
 			}
 
@@ -128,16 +186,6 @@ RequestParser::State RequestParser::_parseChunkedBody()
 			_chunkBytesRemaining = _currentChunkSize;
 		}
 
-		if (_currentChunkSize > 0) {
-			if (_request.getBodySize() + _currentChunkSize > _maxBodySize) {
-				_errorCode = 413;
-				return ERROR;
-			}
-
-			_state = PARSING_CHUNK_DATA;
-			_chunkBytesRemaining = _currentChunkSize;
-		}
-
 		if (_state == PARSING_CHUNK_DATA)
 		{
 			size_t available = _buffer.size();
@@ -145,35 +193,31 @@ RequestParser::State RequestParser::_parseChunkedBody()
 
 			if (toRead > 0)
 			{
-				_request.appendBody(_buffer.substr(0, toRead));
+				size_t totalSize = _request.getBodySize() + toRead;
+				if (totalSize > BODY_TMP_THRESHHOLD && !_usingTmpFile)
+				{
+					if (!_initTmpFile())
+					{
+						_errorCode = 500;
+						return ERROR;
+					}
+				}
+
+				if (_usingTmpFile)
+				{
+					ssize_t written = write(_bodyTmpFd, _buffer.c_str(), toRead);
+					if (written < 0 || static_cast<size_t>(written) != toRead)
+					{
+						_errorCode = 500;
+						_cleanupTmpFile();
+						return ERROR;
+					}
+				}
+				else
+					_request.appendBody(_buffer.substr(0, toRead));
 				_buffer.erase(0, toRead);
 				_chunkBytesRemaining -= toRead;
 			}
-
-			if (_request.getBodySize() > _maxBodySize)
-			{
-				_errorCode = 413;
-				return ERROR;
-			}
-
-			if (_request.getBodySize() > _bodyThreshhold && !_usingTmpFile) {
-				char tmpPath[] = "/tmp/webserv_body_tmp";
-				_bodyTmpFd = mkstemp(tmpPath);
-				if (_bodyTmpFd == -1) {
-					_errorCode = 500;
-					return ERROR;
-				}
-				_bodyTmpPath = tmpPath;
-				_usingTmpFile = true;
-
-				write(_bodyTmpFd, _request.getBody().c_str(), _request.getBodySize());
-				_request.setBody("");
-			}
-
-			if (_usingTmpFile)
-				write(_bodyTmpFd, _buffer.c_str(), toRead);
-			else
-				_request.appendBody(_buffer.substr(0, toRead));
 
 			if (_chunkBytesRemaining == 0)
 			{
@@ -182,6 +226,7 @@ RequestParser::State RequestParser::_parseChunkedBody()
 				if (_buffer.substr(0, 2) != "\r\n")
 				{
 					_errorCode = 400;
+					_cleanupTmpFile();
 					return ERROR;
 				}
 				_buffer.erase(0, 2);
@@ -200,6 +245,14 @@ RequestParser::State RequestParser::_parseChunkedBody()
 			if (lineEnd == 0)
 			{
 				_buffer.erase(0, 2);
+				if (_usingTmpFile)
+				{
+					close(_bodyTmpFd);
+					_bodyTmpFd = -1;
+					_request.setBodyTmpPath(_bodyTmpPath);
+					_bodyTmpPath.clear();
+					_usingTmpFile = false;
+				}
 				return COMPLETE;
 			}
 			_buffer.erase(0, lineEnd + 2);
@@ -207,16 +260,19 @@ RequestParser::State RequestParser::_parseChunkedBody()
 	}
 }
 
-std::string RequestParser::_generateTmpPath(){
+std::string RequestParser::_generateTmpPath()
+{
 	std::ostringstream os;
-	os << "/tmp/webserv_body_" << getpid() << "_" << _tmpFileCounter << std::time(NULL);
+	os << "/tmp/webserv_body_" << getpid() << "_" << _tmpFileCounter++ << std::time(NULL);
 	return os.str();
 }
 
-bool RequestParser::_initTmpFile(){
+bool RequestParser::_initTmpFile()
+{
 	_bodyTmpPath = _generateTmpPath();
 	_bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
-	if (_bodyTmpFd < 0) {
+	if (_bodyTmpFd < 0)
+	{
 		_bodyTmpPath = _generateTmpPath();
 		_bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
 		if (_bodyTmpFd < 0)
@@ -224,10 +280,12 @@ bool RequestParser::_initTmpFile(){
 	}
 	_usingTmpFile = true;
 
-	if (_request.getBodySize() > 0) {
+	if (_request.getBodySize() > 0)
+	{
 		const std::string &existingBody = _request.getBody();
 		ssize_t written = write(_bodyTmpFd, existingBody.c_str(), existingBody.size());
-		if (written < 0 || static_cast<size_t>(written) != existingBody.size()) {
+		if (written < 0 || static_cast<size_t>(written) != existingBody.size())
+		{
 			_cleanupTmpFile();
 			return false;
 		}
@@ -236,13 +294,17 @@ bool RequestParser::_initTmpFile(){
 	return true;
 }
 
-void RequestParser::_cleanupTmpFile(){
-	if (_usingTmpFile) {
-		if (_bodyTmpFd >= 0) {
+void RequestParser::_cleanupTmpFile()
+{
+	if (_usingTmpFile)
+	{
+		if (_bodyTmpFd >= 0)
+		{
 			close(_bodyTmpFd);
 			_bodyTmpFd = -1;
 		}
-		if (!_bodyTmpPath.empty()) {
+		if (!_bodyTmpPath.empty())
+		{
 			unlink(_bodyTmpPath.c_str());
 			_bodyTmpPath.clear();
 		}

@@ -1,237 +1,124 @@
-#include <fstream>
-#include <sstream>
 #include <climits>
 #include <cstdlib>
-#include <sys/dirent.h>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <ctime>
 #include <iomanip>
 
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #include <dirent.h>
-#include <sys/stat.h>
 
 #include "Get.hpp"
-#include "ResponseBuilder.hpp"
-#include "libftpp.hpp"
 #include "Request.hpp"
+#include "ResponseBuilder.hpp"
 #include "RouteMatcher.hpp"
+#include "libftpp.hpp"
 
 using namespace webserv::http;
 
-std::vector<std::string> build_envString(const webserv::http::Request& req, const ServerConfig& config, size_t i)
-{
-	std::vector<std::string> envString;
+std::string webserv::http::Get::execute(const webserv::http::Request &req,
+                                        const ServerConfig &config,
+                                        const RouteConfig &route,
+                                        webserv::core::Client &client) {
+  (void)client;
+  libftpp::debug::DebugLogger _logger("get");
+  int httpCode = 200;
+  (void)httpCode; // FIXME : pas use pour l'instant mais comme la fontion n'est
+                  // pas fini je le laisse
 
-	envString.push_back("REQUEST_METHOD=" + req.getMethod()); // OK GET
-	envString.push_back("QUERY_STRING=" + req.getQueryString()); // query=webserv KO trop long si path_info
-	envString.push_back("PATH_INFO="); // /results  est ce que ca doit etre parse avant ou ici?
-	envString.push_back("SERVER_NAME=" + config.server_name); // OK VPS_SDU_9003
-	envString.push_back("SERVER_PORT=" + libftpp::str::StringUtils::itos(config.port)); // OK 9003
-	envString.push_back("CONTENT_TYPE=" + req.getContentType()); // Cela provient du navigateur, c est le type exact des données envoyées dans le body HTTP. exemple : text/plain, application/json, application/x-www-form-urlencoded --> SC Normal que vide car get
-	envString.push_back("CONTENT_LENGTH=" + req.getContentLength());  // Cela provient du navigateur, c est la taille du body --> SC Normal que vide car get
-	envString.push_back("SCRIPT_NAME=" + config.routes[i].root); // OK seulement POST // cgi/search.py
-	envString.push_back("SERVER_PROTOCOL=" + req.getHttpVersion()); //OK HTTP/1.1 // Cela provient du navigateur et n a rien a voir avec ce que renvoie la requete python ou query
-	envString.push_back("SERVER_SOFTWARE=" + ServerInfo::SERVER_SOFTWARE); // OK webserv/1.0
-	envString.push_back("GATEWAY_INTERFACE=" + ServerInfo::GATEWAY_INTERFACE); // OK CGI/1.1
+  std::string effectiveRoute =
+      webserv::http::RouteMatcher::getEffectiveRoot(config, route);
 
-	//HTTP_*********** issus du header//??seb
-	// https://datatracker.ietf.org/doc/html/rfc3875  chapt 4.1
+  std::string reqPath = req.getPath();
+  std::string fullPath;
 
-	std::cerr << "req.getContentType() = " << req.getContentType() << std::endl;
-	std::cerr << "req.getContentLength() = " << req.getContentLength() << std::endl;
+  if (reqPath.find(route.path) == 0) {
+    std::string suffix = reqPath.substr(route.path.length());
+    fullPath = libftpp::str::PathUtils::join(effectiveRoute, suffix);
+  } else {
+    // Cas fallback
+    fullPath = libftpp::str::PathUtils::join(effectiveRoute, reqPath);
+  }
 
-	return(envString);
-}
+  _logger << "Get effectiveRoute: " << effectiveRoute << std::endl;
+  _logger << "Get fullPath: " << fullPath << std::endl;
 
+  if (fullPath.find(effectiveRoute) != 0)
+    return _logger << fullPath << "find" << effectiveRoute << "failed"
+                   << std::endl,
+           ResponseBuilder::generateError(403, config);
 
-std::string execute_cgi(const webserv::http::Request& req, const ServerConfig& config, size_t i)
-{
-	libftpp::debug::DebugLogger _logger("cgi");
-	_logger << std::endl << "on est dans CGI" << std::endl << std::endl;
-//	req.print();
-//	config.print();
-//   http://37.59.120.163:9003/search?query=webserv/results   //SDU
-//   http://37.59.120.163:9003//cgi-bin/search.py/results   //SDU
+  if (!libftpp::str::PathUtils::exists(fullPath))
+    return _logger << fullPath << " don't exist" << std::endl,
+           ResponseBuilder::generateError(404, config);
 
-	int pipefd[2];
-	if (pipe(pipefd) == -1)
-		throw std::runtime_error("CGI pipe failed");
+  // index et auto index
+  if (libftpp::str::PathUtils::isDirectory(fullPath)) {
 
-	pid_t pid = fork();
+    std::string indexName;
+    if (config.index.empty()) {
+      _logger << indexName << "= empty Fallback to index.htm" << std::endl;
+      indexName = "index.html";
 
-	if(pid < 0)
-	{
-		close(pipefd[0]);
-		close(pipefd[1]);
-		throw std::runtime_error("CGI fork failed");
-	}
-
-	if(pid == 0 ) // fils
-	{
-		close(pipefd[0]);
-		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
-		{
-			close(pipefd[1]);
-			_exit(1);
-		}
-		close(pipefd[1]);
-
-		std::vector<std::string> envString = build_envString(req, config, i);
-		std::vector<char*>env;
-		for(size_t i = 0; i < envString.size(); i++)
-			env.push_back(const_cast<char*>(envString[i].c_str()));
-		env.push_back(NULL);
-		char *root = const_cast<char*>(config.routes[i].root.c_str());
-		char *args[] = {root, NULL};
-
-		_logger << "[child] " << root << args << env.data() << std::endl;
-		execve(root,args,env.data());
-		_logger << "[child] execve error" << std::endl;
-		perror("execve");
-		_exit(1);
-	}
-
-	//parent
-	close(pipefd[1]);
-
-	std::string output;
-	char buffer[1024];
-	ssize_t n;
-
-	while((n = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-		output.append(buffer,n);
-	close(pipefd[0]);
-	if (n < 0)
-		throw std::runtime_error("CGI read failed");
-
-	int status;
-	if(waitpid(pid, &status, 0) == -1)
-		throw std::runtime_error("CGI waitpid failed");
-
-    if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-	{
-        throw std::runtime_error("CGI exited whith code : " + libftpp::str::StringUtils::itos(WEXITSTATUS(status)));
-	}
-//	std::cerr << "status = " << status << std::endl;
-//	status = 1;
-    if (WIFSIGNALED(status))
-	{
-        throw std::runtime_error("CGI killed by signal : " + libftpp::str::StringUtils::itos(WTERMSIG(status)));
-	}
-	return(output);
-}
-
-std::string webserv::http::Get::execute(const webserv::http::Request& req, const ServerConfig& config, const RouteConfig& route)
-{
-	libftpp::debug::DebugLogger _logger("get");
-	int httpCode = 200;
-	(void)httpCode; // FIXME : pas use pour l'instant mais comme la fontion n'est pas fini je le laisse
-
-	std::string effectiveRoute = webserv::http::RouteMatcher::getEffectiveRoot(config, route);
-
-	std::string reqPath = req.getPath();
-	std::string fullPath;
-
-	if (reqPath.find(route.path) == 0) {
-		std::string suffix = reqPath.substr(route.path.length());
-		fullPath = libftpp::str::PathUtils::join(effectiveRoute, suffix);
-	} else {
-		// Cas fallback
-		fullPath = libftpp::str::PathUtils::join(effectiveRoute, reqPath);
-	}
-
-	_logger << "Get effectiveRoute: " << effectiveRoute << std::endl;
-	_logger << "Get fullPath: " << fullPath << std::endl;
-
-	if (fullPath.find(effectiveRoute) != 0)
-		return _logger << fullPath << "find" << effectiveRoute << "failed" << std::endl,
-			ResponseBuilder::generateError(403, config);
-
-	if (!libftpp::str::PathUtils::exists(fullPath))
-		return _logger << fullPath << " don't exist" << std::endl,
-			ResponseBuilder::generateError(404, config);
-
-		// index et auto index
-	if (libftpp::str::PathUtils::isDirectory(fullPath)) {
-
-		std::string indexName;
-		if (config.index.empty()) {
-			_logger << indexName << "= empty Fallback to index.htm" << std::endl;
-			indexName = "index.html";
-
-		}
-		else {
-			_logger << indexName << "= " << config.index << std::endl;
-			indexName = config.index;
-		}
-
-		std::string indexPath = libftpp::str::PathUtils::join(fullPath, indexName);
-		if (libftpp::str::PathUtils::exists(indexPath))
-			fullPath = indexPath;
-		else {
-			if (route.directory_listing){
-				std::string htmlContent = _displayAutoIndex(fullPath, req.getPath());
-				if (htmlContent.empty())
-					return ResponseBuilder::generateError(500, config);
-				return _createSuccessResponse(htmlContent, "index.html");
-			}
-			return _logger << "no route.directory_listing for auto index" << std::endl,
-				ResponseBuilder::generateError(403, config);
-		}
-	}
-	if (route.cgi == true) {
-        std::string ext = route.cgi_extension;
-
-        if (fullPath.length() >= ext.length() &&
-            fullPath.compare(fullPath.length() - ext.length(), ext.length(), ext) == 0)
-        {
-			_logger << "=====  CGI (GET)  =====" << std::endl;
-			_logger << "cgi = "<< req.getPath() << std::endl;
-
-			std::string output;
-			for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou il faut le positionner
-	 		{
-	 			if(req.getPath() == config.routes[i].path)
-	 			{
-					fullPath = "cgi.html";
-
-					output = execute_cgi(req, config, i);
-					_logger << "output = " << output << std::endl;
-					return _createSuccessResponse(effectiveRoute, fullPath);
-				}
-			}
-
-			//partie cgi
-			// pas reussi a inclure la fonction actuel je pense elle devrait avoir besoin
-			// de ces 4 info pour fonctionner ou en tout cas avec ces 4 la t'as tout en cas de besoin
-            //return execute_cgi(req, fullPath, config, route);
-			return _logger << "output = " << output << std::endl,
-				"HTTP/1.1 200 OK\r\n\r\n CG1§§§8I"; // <--- coucou de mon chat
-
-        }
+    } else {
+      _logger << indexName << "= " << config.index << std::endl;
+      indexName = config.index;
     }
 
-    if (access(fullPath.c_str(), R_OK) != 0) {
-        return _logger << "acces(fullPAth) | " << fullPath << "dont have permittion for Read" << std::endl,
-			ResponseBuilder::generateError(403, config);
+    std::string indexPath = libftpp::str::PathUtils::join(fullPath, indexName);
+    if (libftpp::str::PathUtils::exists(indexPath))
+      fullPath = indexPath;
+    else {
+      if (route.directory_listing) {
+        // TODO SEB: Autoindex
+        return _logger << "===== AUTO INDEX =====" << std::endl,
+               "HTTP/1.1 200 OK\r\n\r\nAUTOINDEX TODO";
+      }
+      return _logger << "no route.directory_listing for auto index"
+                     << std::endl,
+             ResponseBuilder::generateError(403, config);
     }
+  }
+  if (route.cgi == true) {
+    std::string ext = route.cgi_extension;
 
-	_logger << "===== static file =====" << std::endl;
-    std::string content = _readFile(fullPath);
-    struct stat s;
-    stat(fullPath.c_str(), &s);
-    if (content.empty() && s.st_size > 0) {
-        return _logger << content << "is empty or s.st_size > 0" << std::endl,
-			ResponseBuilder::generateError(500, config);
+    if (fullPath.length() >= ext.length() &&
+        fullPath.compare(fullPath.length() - ext.length(), ext.length(), ext) ==
+            0) {
+      _logger << "=====  CGI (GET)  =====" << std::endl;
+      _logger << "cgi = " << req.getPath() << std::endl;
+
+      if (client.getCgi().run(req, config, route)) {
+        client.setExecutingCgi(true);
+        return "";
+      } else {
+        return ResponseBuilder::generateError(500, config);
+      }
     }
+  }
+  if (access(fullPath.c_str(), R_OK) != 0) {
+    return _logger << "acces(fullPAth) | " << fullPath
+                   << "dont have permittion for Read" << std::endl,
+           ResponseBuilder::generateError(403, config);
+  }
 
-    return _createSuccessResponse(content, fullPath);
+  _logger << "===== static file =====" << std::endl;
+  std::string content = _readFile(fullPath);
+  struct stat s;
+  stat(fullPath.c_str(), &s);
+  if (content.empty() && s.st_size > 0) {
+    return _logger << content << "is empty or s.st_size > 0" << std::endl,
+           ResponseBuilder::generateError(500, config);
+  }
+
+  return _createSuccessResponse(content, fullPath);
 }
 
-// std::string webserv::http::Get::execute(const http::Request& req, const ServerConfig& config, const RouteConfig& route)
+// std::string webserv::http::Get::execute(const http::Request& req, const
+// ServerConfig& config, const RouteConfig& route)
 // {
 // 	(void)route;
 // 	int httpCode = 200;
@@ -242,7 +129,8 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 // 		return ResponseBuilder::generateError(httpCode, config);
 
 // 	//   http://37.59.120.163:9003/search?query=webserv   //SDU
-// 	for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou il faut le positionner
+// 	for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou
+// il faut le positionner
 // 	{
 // 		if(req.getPath() == config.routes[i].path)
 // 		{
@@ -253,15 +141,17 @@ std::string webserv::http::Get::execute(const webserv::http::Request& req, const
 // 		}
 // 	}
 // 	// TODO RAPH: modif getSecurePath pour aller avec cgi
-// 	// remplir full path avec vrai path cgi et descendre le block en haut -> en bas
-// 	fullPath = _getSecurePath(config.root, req.getPath(), httpCode);//SDU : trop restrictif
-// 	//std::cerr << "fullPath = " <<  fullPath << " code = " << httpCode << std::endl;
-// 	struct stat s;
-// 	if (stat(fullPath.c_str(), &s) == 0 && (s.st_mode & S_IFDIR)) {
-// 		if (!_checkIndexFile(fullPath, httpCode, config)) {
+// 	// remplir full path avec vrai path cgi et descendre le block en haut ->
+// en bas 	fullPath = _getSecurePath(config.root, req.getPath(),
+// httpCode);//SDU : trop restrictif
+// 	//std::cerr << "fullPath = " <<  fullPath << " code = " << httpCode <<
+// std::endl; 	struct stat s; 	if (stat(fullPath.c_str(), &s) == 0 &&
+// (s.st_mode & S_IFDIR)) { 		if (!_checkIndexFile(fullPath, httpCode,
+// config)) {
 // 			// TODO: RAPH
-// 			// Ici, plus tard : quelque cgose comme if (config.autoindex) return AutoIndex::gen(...);
-// 			return ResponseBuilder::generateError(httpCode, config);
+// 			// Ici, plus tard : quelque cgose comme if
+// (config.autoindex) return AutoIndex::gen(...); 			return
+// ResponseBuilder::generateError(httpCode, config);
 // 		}
 // 	}
 

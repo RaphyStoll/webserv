@@ -140,7 +140,7 @@ siege:
 	siege --file=staging-urls.txt --internet --verbose --reps=200 --concurrent=25 --no-parser
 
 siege_stress:
-	siege --benchmark --file=staging-urls.txt --concurrent=100 --time=30S --no-parser
+	siege --benchmark --file=staging-urls.txt --concurrent=255 --time=3M
 
 siege_charge:
 	siege --internet --delay=1 --file=staging-urls.txt --concurrent=50 --reps=100 --verbose

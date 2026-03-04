@@ -1,7 +1,7 @@
 #include "Request.hpp"
 #include "../include/StringUtils.hpp"
-#include <iostream>
 #include "libftpp.hpp"
+#include <iostream>
 
 using namespace webserv::http;
 
@@ -36,6 +36,20 @@ void Request::setBody(const std::string &body) { _body = body; }
 void Request::setContentLength(const std::string &content_l) { _contentLength = content_l; }
 void Request::setContentType(const std::string &content_t) { _contentType = content_t; }
 void Request::setBodyTmpPath(const std::string &path) { _bodyTmpPath = path; }
+
+void Request::setHttpVersion(const std::string &version)
+{
+	_httpVersion = version;
+}
+
+void Request::setContentLength(const std::string &content_l)
+{
+	_contentLength = content_l;
+}
+void Request::setContentType(const std::string &content_t)
+{
+	_contentType = content_t;
+}
 
 void Request::setHttpVersion(const std::string &version)
 {

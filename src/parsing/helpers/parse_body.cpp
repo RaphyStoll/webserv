@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <sstream>
-#include <sys/_types/_ssize_t.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>

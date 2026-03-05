@@ -37,6 +37,8 @@ namespace webserv
 			std::string getBody() const;
 			std::string getContentLength() const;
 			std::string getContentType() const;
+			
+			// retourne le lien du fichier temporaire qui contient les donnees unchuked
 			std::string getBodyTmpPath() const { return _bodyTmpPath; }
 
 			void setMethod(const std::string &method);
@@ -61,10 +63,11 @@ namespace webserv
 					return (connection == "keep-alive");
 			}
 
+			//Check si le fichier tmp est cree pour stock le chunk, sinon c'est dans la memoire 
 			bool hasBodyTmpFile() const { return !_bodyTmpPath.empty(); }
 
 			void print(void) const; // SDU
 		};
 	} // namespace http
-}
+} // namespace webserv
 #endif

@@ -1,15 +1,15 @@
 #include <climits>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <vector>
-#include <ctime>
-#include <iomanip>
 
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <dirent.h>
 
 #include "Get.hpp"
 #include "Request.hpp"
@@ -73,9 +73,10 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
       fullPath = indexPath;
     else {
       if (route.directory_listing) {
-        // TODO SEB: Autoindex
-        return _logger << "===== AUTO INDEX =====" << std::endl,
-               "HTTP/1.1 200 OK\r\n\r\nAUTOINDEX TODO";
+        std::string htmlContent = _displayAutoIndex(fullPath, req.getPath());
+        if (htmlContent.empty())
+          return ResponseBuilder::generateError(500, config);
+        return _createSuccessResponse(htmlContent, "index.html");
       }
       return _logger << "no route.directory_listing for auto index"
                      << std::endl,
@@ -166,39 +167,45 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
 // 	return _createSuccessResponse(content, fullPath);
 // }
 
-std::string webserv::http::Get::_displayAutoIndex(const std::string &path, const std::string &requestPath)
-{
-	DIR *dir = opendir(path.c_str());
-	if (!dir)
-		return ""; // error 500
+std::string
+webserv::http::Get::_displayAutoIndex(const std::string &path,
+                                      const std::string &requestPath) {
+  DIR *dir = opendir(path.c_str());
+  if (!dir)
+    return ""; // error 500
 
-	std::ostringstream html;
-	html << "<html><head><title>Index of " << requestPath << "</title></head>\n";
-	html << "<body><h1>Index of " << requestPath << "</h1>\n";
-	html << "<hr><pre>\n";
+  std::ostringstream html;
+  html << "<html><head><title>Index of " << requestPath << "</title></head>\n";
+  html << "<body><h1>Index of " << requestPath << "</h1>\n";
+  html << "<hr><pre>\n";
 
-	if (requestPath != "/")
-		html << "<a href=\"../\">..</a>\n";
+  if (requestPath != "/")
+    html << "<a href=\"../\">..</a>\n";
 
-	struct dirent *entry;
-	while ((entry = readdir(dir)) != NULL)
-	{
-		std::string name = entry->d_name;
-		if (name == "." || name == "..")
-			continue;
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    std::string name = entry->d_name;
+    if (name == "." || name == "..")
+      continue;
 
-		std::string fullPath = path + "/" + name;
-		struct stat st;
-		stat(fullPath.c_str(), &st);
+    std::string fullPath = path + "/" + name;
+    struct stat st;
+    stat(fullPath.c_str(), &st);
 
-		if (S_ISDIR(st.st_mode))
-			name += "/";
+    if (S_ISDIR(st.st_mode))
+      name += "/";
 
-		html << "<a href=\"" << name << "\">" << name << "</a>";
-		// todo check for more infos
-		html << "\n";
-	}
-	closedir(dir);
-	html << "</pre><hr></body></html>";
-	return html.str();
+    html << "<a href=\"" << name << "\">" << name << "</a>\n";
+    html << "\n";
+  }
+  closedir(dir);
+  html << "</pre><hr>";
+  html << "<script>function a() { setInterval(bg, "
+          "250);alert(\"hehe..\");function bg() {var col =\"#\" + "
+          "((Math.random() * 0xffffff) << 0).toString(16).padStart(6, \"0\"); "
+          "document.body.style.backgroundColor = col; }}</script >";
+  html << "<button onclick=\"a()\">Free "
+          "wallets !!!</button>";
+  html << "</body></html>";
+  return html.str();
 }

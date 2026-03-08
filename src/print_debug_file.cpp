@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /**
  * @brief Constructeur de la classe DebugLogger
@@ -12,13 +14,43 @@
  *
  * @param filename nom du fichier de log
  */
-libftpp::debug::DebugLogger::DebugLogger(const std::string& filename) 
-	: _filename(filename) {
+libftpp::debug::DebugLogger::DebugLogger(const std::string& filename) {
+	std::string name = filename;
+	// Ajouter .log si absent
+	if (name.length() < 4 || name.substr(name.length() - 4) != ".log")
+		name += ".log";
+
+	// Créer le dossier log s'il n'existe pas
+	struct stat st;
+	if (stat("log", &st) != 0)
+		mkdir("log", 0600);
+
+	_filename = "log/" + name;
+
 	#ifdef DEBUG
 		// Effacer le fichier à la création du logger
 		std::ofstream outfile(_filename.c_str(), std::ios::trunc);
 		outfile.close();
 	#endif
+}
+
+/**
+ * @brief Constructeur de copie
+ */
+libftpp::debug::DebugLogger::DebugLogger(const DebugLogger& other) : _filename(other._filename) {
+	_ss << other._ss.str();
+}
+
+/**
+ * @brief Opérateur d'affectation
+ */
+libftpp::debug::DebugLogger& libftpp::debug::DebugLogger::operator=(const DebugLogger& other) {
+	if (this != &other) {
+		_filename = other._filename;
+		_ss.str("");
+		_ss << other._ss.str();
+	}
+	return *this;
 }
 
 /**
@@ -39,7 +71,7 @@ void libftpp::debug::DebugLogger::log(const std::string& message) {
 		std::ofstream outfile(_filename.c_str(), std::ios::app);
 		if (!outfile)
 			return ;
-        
+		
 		outfile << message << std::endl;
 		outfile.close();
 	#else
@@ -68,17 +100,17 @@ void libftpp::debug::DebugLogger::clear() {
 void libftpp::debug::DebugLogger::debug(const std::string& message) {
 	#ifdef DEBUG
 		static bool first = true;
-        
+		
 		std::ios_base::openmode mode = std::ios::app;
 		if (first) {
 			mode = std::ios::trunc;
 			first = false;
 		}
-        
+		
 		std::ofstream outfile("debug.log", mode);
 		if (!outfile)
 			return ;
-        
+		
 		outfile << message << std::endl;
 		outfile.close();
 	#else

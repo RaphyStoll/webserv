@@ -1,8 +1,10 @@
 #include "../include/StringUtils.hpp"
 
 #include <cctype>
+#include <cstddef>
 #include <limits>
 #include <cstdlib>
+#include <string>
 
 using libftpp::str::StringUtils;
 
@@ -87,7 +89,7 @@ bool StringUtils::parse_int(const std::string& s, int& out) {
 
 	size_t i = 0;
 	bool negative = false;
-	
+
 	if (s[i] == '-') {
 		negative = true;
 		++i;
@@ -109,12 +111,12 @@ bool StringUtils::parse_int(const std::string& s, int& out) {
 		unsigned char c = (unsigned char)s[i];
 		if (c < '0' || c > '9')
 			return false;
-		
+
 		unsigned int digit = (unsigned int)(c - '0');
 
 		if (uval > (limit - digit) / 10)
 			return false;
-		
+
 		uval = uval * 10 + digit;
 	}
 
@@ -175,19 +177,19 @@ bool StringUtils::parse_size_t(const std::string& s, size_t& out) {
 }
 
 std::string StringUtils::toLower(const std::string& s) {
-    std::string out = s;
-    for (size_t i = 0; i < out.size(); ++i) {
-        unsigned char c = (unsigned char)out[i];
-        out[i] = (char)std::tolower(c);
-    }
-    return out;
+	std::string out = s;
+	for (size_t i = 0; i < out.size(); ++i) {
+		unsigned char c = (unsigned char)out[i];
+		out[i] = (char)std::tolower(c);
+	}
+	return out;
 }
 
 std::string StringUtils::toUpper(const std::string& s) {
-    std::string out = s;
-    for (size_t i = 0; i < out.size(); ++i) {
-        unsigned char c = (unsigned char)out[i];
-        out[i] = (char)std::toupper(c);
-    }
-    return out;
+	std::string out = s;
+	for (size_t i = 0; i < out.size(); ++i) {
+		unsigned char c = (unsigned char)out[i];
+		out[i] = (char)std::toupper(c);
+	}
+	return out;
 }

@@ -1,5 +1,6 @@
 #include "RequestParser.hpp"
 #include <cctype>
+#include <cstdlib>
 #include <string>
 
 using namespace webserv::http;
@@ -17,7 +18,12 @@ RequestParser::~RequestParser()
 
 RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf) // SDU suppr namespace
 {
-	(void)conf;
+	if (!_configResolved)
+	{
+		_config = &conf;
+		_resolveConfigLimits();
+	}
+
 	if (_state == COMPLETE || _state == ERROR)
 		return _state;
 
@@ -45,12 +51,12 @@ RequestParser::State RequestParser::parse(const char *data, size_t size, const N
 			if (_state == PARSING_BODY_LENGTH || _state == PARSING_CHUNK_SIZE ||
 				_state == COMPLETE)
 			{
+				_resolveConfigLimits();
 				if (!_validateHeaders())
 				{
 					_state = ERROR;
 					return _state;
 				}
-				//_resolveConfigLimits();
 			}
 			break;
 
@@ -96,43 +102,68 @@ void RequestParser::reset()
 	_bodyTmpFd = -1;
 }
 
-// void RequestParser::_resolveConfigLimits(){
-// 	if (_configResolved || _config == NULL)
-// 		return;
+void RequestParser::_resolveConfigLimits()
+{
+	if (_configResolved || _config == NULL || _config->empty())
+		return;
 
-// 	_configResolved = true;
+	_configResolved = true;
 
-// 	std::string host = _request.getHeader("Host");
-// 	if (host.empty())
-// 		return;
+	std::string host = _request.getHeader("Host");
+	std::string hostName;
+	int hostPort = 0;
 
-// 	size_t colonPos = host.find(':');
-// 	std::string hostName = (colonPos != std::string::npos) ? host.substr(0, colonPos) : host;
-// 	int hostPort = 0;
-// 	if (colonPos != std::string::npos)
-// 	{
-// 		std::string portStr = host.substr(colonPos + 1);
-// 		hostPort = std::atoi(portStr.c_str());
-// 	}
+	if (!host.empty())
+	{
+		size_t colonPos = host.find(':');
+		hostName = (colonPos != std::string::npos) ? host.substr(0, colonPos) : host;
+		if (colonPos != std::string::npos)
+		{
+			std::string portStr = host.substr(colonPos + 1);
+			hostPort = std::atoi(portStr.c_str());
+		}
+	}
 
-	// for (NetworkConfig::const_iterator portIt = _config->begin(); portIt != _config->end(); ++portIt)
-	// {
-	// 	if (hostPort != 0 && portIt->first != hostPort)
-	// 		continue;
-	// 	const std::vector<ServerConfig>& servers = portIt->second;
-	// 	for (size_t i = 0; i < servers.size(); ++i)
-	// 	{
-	// 		if (servers[i].server_name == hostName || hostPort != 0)
-	// 		{
-	// 			_maxBodySize = servers[i].max_body_size;
-	// 			return;
-	// 		}
-	// 	}
+	if (hostPort != 0)
+	{
+		NetworkConfig::const_iterator byPort = _config->find(hostPort);
+		if (byPort != _config->end() && !byPort->second.empty())
+		{
+			const std::vector<ServerConfig> &servers = byPort->second;
+			for (size_t i = 0; i < servers.size(); ++i)
+			{
+				if (!hostName.empty() && servers[i].server_name == hostName)
+				{
+					_maxBodySize = servers[i].max_body_size;
+					return;
+				}
+			}
+			_maxBodySize = servers[0].max_body_size;
+			return;
+		}
+	}
 
-	// 	if (!servers.empty() && (hostPort == 0 || portIt->first == hostPort))
-	// 	{
-	// 		_maxBodySize = servers[0].max_body_size;
-	// 		return;
-	// 	}
-	// }
-//}
+	for (NetworkConfig::const_iterator it = _config->begin(); it != _config->end(); ++it)
+	{
+		const std::vector<ServerConfig> &servers = it->second;
+		if (servers.empty())
+			continue;
+		for (size_t i = 0; i < servers.size(); ++i)
+		{
+			if (!hostName.empty() && servers[i].server_name == hostName)
+			{
+				_maxBodySize = servers[i].max_body_size;
+				return;
+			}
+		}
+	}
+
+	for (NetworkConfig::const_iterator it = _config->begin(); it != _config->end(); ++it)
+	{
+		if (!it->second.empty())
+		{
+			_maxBodySize = it->second[0].max_body_size;
+			return;
+		}
+	}
+}

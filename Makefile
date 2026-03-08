@@ -102,7 +102,9 @@ fclean: clean
 	$(MAKE) -C $(LIBFT_DIR) fclean > /dev/null 2>&1
 	@echo "\033[32m[webserv] Full clean done!\033[0m"
 
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 -include $(DEPS)
 
@@ -214,3 +216,6 @@ help_fr:
 
 
 .PHONY: all clean fclean re colima-start up down join logs re-docker test-run test-clean help help_fr
+
+# Keep cleanup/rebuild targets sequential even if MAKEFLAGS contains -j.
+.NOTPARALLEL: clean fclean re

@@ -90,7 +90,9 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd,
         _poll_fds[poll_index].events = POLLIN | POLLOUT;
       }
 
-      // TODO RAPH: ici keep alive after est ici (reset parser)
+      if (!client.isExecutingCgi() && !req.keepAlive()) {
+        client.reset();
+      }
 
     } else if (state == http::RequestParser::ERROR) {
       _logger << "[EventLoop] Parsing error on fd " << client_fd << std::endl;

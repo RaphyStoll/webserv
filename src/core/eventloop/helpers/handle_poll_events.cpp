@@ -3,6 +3,7 @@
 #include <string>
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -10,6 +11,48 @@
 #include "EventLoop.hpp"
 
 using namespace webserv;
+
+namespace {
+
+bool writeCgiBodyFromTmpFile(int pipeFd, webserv::core::Cgi &cgi,
+                             const webserv::http::Request &req,
+                             libftpp::debug::DebugLogger &logger) {
+  int tmpFd = open(req.getBodyTmpPath().c_str(), O_RDONLY);
+  if (tmpFd < 0) {
+    logger << "[EventLoop] Failed to open request tmp file: "
+           << req.getBodyTmpPath() << std::endl;
+    return false;
+  }
+
+  char chunk[8192];
+  off_t offset = static_cast<off_t>(cgi.getBodyBytesWritten());
+  ssize_t readBytes = pread(tmpFd, chunk, sizeof(chunk), offset);
+  close(tmpFd);
+
+  if (readBytes > 0) {
+    ssize_t written = write(pipeFd, chunk, static_cast<size_t>(readBytes));
+    if (written > 0)
+      cgi.addBodyBytesWritten(static_cast<size_t>(written));
+    else if (written < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+      logger << "[EventLoop] CGI write error: " << std::strerror(errno)
+             << std::endl;
+      return false;
+    }
+    return true;
+  }
+
+  if (readBytes == 0)
+    return true;
+
+  if (errno != EAGAIN && errno != EWOULDBLOCK) {
+    logger << "[EventLoop] CGI tmp read error: " << std::strerror(errno)
+           << std::endl;
+    return false;
+  }
+  return true;
+}
+
+} // namespace
 
 void webserv::core::EventLoop::_handle_poll_events() {
   for (size_t i = 0; i < _poll_fds.size(); ++i) {
@@ -71,8 +114,41 @@ void webserv::core::EventLoop::_handle_poll_events() {
       }
 
       if ((revents & POLLOUT) && fd == cgi.getPipeInWriteFd()) {
-        const std::string &body = client->getParser().getRequest().getBody();
+        const webserv::http::Request &req = client->getParser().getRequest();
+        const std::string &body = req.getBody();
         size_t written = cgi.getBodyBytesWritten();
+
+        if (req.hasBodyTmpFile()) {
+          if (!writeCgiBodyFromTmpFile(fd, cgi, req, _logger)) {
+            cgi.closePipeInWriteFd();
+            _cgiFds.erase(fd);
+            _poll_fds.erase(_poll_fds.begin() + i);
+            i--;
+            continue;
+          }
+
+          int tmpFd = open(req.getBodyTmpPath().c_str(), O_RDONLY);
+          if (tmpFd < 0) {
+            _logger << "[EventLoop] Failed to reopen request tmp file: "
+                    << req.getBodyTmpPath() << std::endl;
+            cgi.closePipeInWriteFd();
+            _cgiFds.erase(fd);
+            _poll_fds.erase(_poll_fds.begin() + i);
+            i--;
+            continue;
+          }
+          char eofProbe;
+          ssize_t probe = pread(tmpFd, &eofProbe, 1,
+                                static_cast<off_t>(cgi.getBodyBytesWritten()));
+          close(tmpFd);
+          if (probe == 0) {
+            cgi.closePipeInWriteFd();
+            _cgiFds.erase(fd);
+            _poll_fds.erase(_poll_fds.begin() + i);
+            i--;
+          }
+          continue;
+        }
 
         if (written < body.size()) {
           ssize_t n = write(fd, body.c_str() + written, body.size() - written);

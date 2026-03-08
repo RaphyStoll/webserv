@@ -16,6 +16,29 @@ using namespace webserv::http;
 
 unsigned int RequestParser::_tmpFileCounter = 0;
 
+namespace {
+
+bool writeAll(int fd, const char *data, size_t len)
+{
+	while (len > 0)
+	{
+		ssize_t written = write(fd, data, len);
+		if (written < 0)
+		{
+			if (errno == EINTR)
+				continue;
+			return false;
+		}
+		if (written == 0)
+			return false;
+		data += written;
+		len -= static_cast<size_t>(written);
+	}
+	return true;
+}
+
+} // namespace
+
 RequestParser::State RequestParser::_determineBodyParsing()
 {
 	if (_hasTransferEncoding && _seenContentLength) // les 2 ne peuvent pas se retrouver en meme temps
@@ -85,8 +108,7 @@ RequestParser::State RequestParser::_parseBodyByLength()
 
 		if (_usingTmpFile)
 		{
-			ssize_t written = write(_bodyTmpFd, _buffer.c_str(), toRead);
-			if (written < 0 || static_cast<size_t>(written) != toRead)
+			if (!writeAll(_bodyTmpFd, _buffer.c_str(), toRead))
 			{
 				_errorCode = 500;
 				_cleanupTmpFile();
@@ -106,6 +128,7 @@ RequestParser::State RequestParser::_parseBodyByLength()
 		{
 			close(_bodyTmpFd);
 			_bodyTmpFd = -1;
+			_request.setBodyTmpPath(_bodyTmpPath);
 		}
 		_state = COMPLETE;
 	}
@@ -204,8 +227,7 @@ RequestParser::State RequestParser::_parseChunkedBody()
 
 				if (_usingTmpFile)
 				{
-					ssize_t written = write(_bodyTmpFd, _buffer.c_str(), toRead);
-					if (written < 0 || static_cast<size_t>(written) != toRead)
+					if (!writeAll(_bodyTmpFd, _buffer.c_str(), toRead))
 					{
 						_errorCode = 500;
 						_cleanupTmpFile();
@@ -249,8 +271,6 @@ RequestParser::State RequestParser::_parseChunkedBody()
 					close(_bodyTmpFd);
 					_bodyTmpFd = -1;
 					_request.setBodyTmpPath(_bodyTmpPath);
-					_bodyTmpPath.clear();
-					_usingTmpFile = false;
 				}
 				return COMPLETE;
 			}
@@ -282,8 +302,7 @@ bool RequestParser::_initTmpFile()
 	if (_request.getBodySize() > 0)
 	{
 		const std::string &existingBody = _request.getBody();
-		ssize_t written = write(_bodyTmpFd, existingBody.c_str(), existingBody.size());
-		if (written < 0 || static_cast<size_t>(written) != existingBody.size())
+		if (!writeAll(_bodyTmpFd, existingBody.c_str(), existingBody.size()))
 		{
 			_cleanupTmpFile();
 			return false;

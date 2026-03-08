@@ -79,6 +79,9 @@ NC = \033[0m
 # Règles
 .PHONY: all static dev clean fclean re help
 
+# Keep cleanup/rebuild targets sequential even if MAKEFLAGS contains -j.
+.NOTPARALLEL: clean fclean re
+
 # Par défaut: compile les deux
 all: static dev
 
@@ -169,7 +172,9 @@ fclean: clean
 	@echo "$(GREEN)✓ Libraries cleaned!$(NC)"
 
 # Recompilation
-re: fclean all
+re:
+	@$(MAKE) fclean
+	@$(MAKE) all
 
 # Aide
 help:

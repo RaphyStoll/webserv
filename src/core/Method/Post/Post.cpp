@@ -76,9 +76,16 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
 
     _logger << "Saving POST data to: " << uploadPath << std::endl;
 
-    // TODO SEB: Remplacer getBody() par la lecture depuis le fichier temporaire
-    // de Request
-    if (!_writeFile(uploadPath, req.getBody())) {
+    bool writeSuccess = _writeFile(uploadPath, req);
+
+    if (req.hasBodyTmpFile())
+    {
+      std::string tmpPath = req.getBodyTmpPath();
+      if (!tmpPath.empty())
+        unlink(tmpPath.c_str());
+    }
+
+    if (!writeSuccess) {
       return _logger << "System Error: Could not write file to " << uploadPath
                      << std::endl,
              ResponseBuilder::generateError(500, config);

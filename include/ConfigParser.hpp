@@ -14,7 +14,7 @@
 
 #include "libftpp.hpp"
 
-#define MAX_BODY_SIZE_LIMIT (1024 * 1024)
+#define MAX_BODY_SIZE_LIMIT 5000000//(1024 * 1024)
 #define MIN_BODY_SIZE_LIMIT 0
 #define PORT_MIN 1024
 #define PORT_MAX 65535

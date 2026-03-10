@@ -50,8 +50,9 @@ int main(int argc, char** argv) {
 
 		NetworkConfig net_config = data.cParser();
 
+		//TODO: boucle d'iterateur qui lance 1 boot strap par serveur
 		_logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
-		BootStrap bootstrap(net_config);//
+		BootStrap bootstrap(net_config);
 
 		bootstrap.start();
 

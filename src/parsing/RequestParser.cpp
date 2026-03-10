@@ -87,7 +87,7 @@ void RequestParser::reset()
 	_buffer.clear();
 	_errorCode = 0;
 	_contentLength = 0;
-	_maxBodySize = DEFAULT_MAX_BODY_SIZE;
+	_maxBodySize = DEFAULT_MAX_BODY_SIZE; // TODO: iterer sur _config pour le bdy size de la config
 	_bodyBytesRemaining = 0;
 	_currentChunkSize = 0;
 	_chunkBytesRemaining = 0;

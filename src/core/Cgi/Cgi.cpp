@@ -1,5 +1,6 @@
 #include "Cgi.hpp"
 #include "Net.hpp"
+#include "RouteMatcher.hpp"
 #include "libftpp.hpp"
 #include <cstdio>
 #include <cstdlib>
@@ -140,10 +141,20 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
     }
     env.push_back(NULL);
 
-    char *root = const_cast<char *>(route.root.c_str());
+    char *root = const_cast<char *>(route.root.c_str()); // TODO: matcher les routes
     char *args[] = {root, NULL};
 
+	_logger << "-----------------------------------" << std::endl;
+	_logger << "args[0]" << args[0] << std::endl;
+	_logger << "args[1]" << args[1] << std::endl;
+	_logger << "root = " << root << std::endl;
+	for (size_t i = 0; i < env.size(); i++) {
+        if (env[i] != NULL) {
+            _logger << "env[" << i << "]: " << env[i] << std::endl;
+        }
+    }
     execve(root, args, env.data());
+	_logger << "execve fail" << std::endl;
     perror("execve");
     _exit(1);
   }

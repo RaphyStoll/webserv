@@ -28,10 +28,10 @@ void webserv::core::EventLoop::_close_connection(int fd, size_t poll_index) {
             _poll_fds.pop_back();
             if (k == poll_index)
               poll_index = _poll_fds.size() -
-                           1; // Unlikely but protects against swap logic fault
+                           1;
             else if (k < poll_index)
-              poll_index--; // Si l'élément supprimé était AVANT poll_index,
-                            // poll_index doit reculer
+              poll_index--;
+
             break;
           }
         }

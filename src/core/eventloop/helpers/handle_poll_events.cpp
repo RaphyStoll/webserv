@@ -52,7 +52,7 @@ bool writeCgiBodyFromTmpFile(int pipeFd, webserv::core::Cgi &cgi,
   return true;
 }
 
-} // namespace
+}
 
 void webserv::core::EventLoop::_handle_poll_events() {
   for (size_t i = 0; i < _poll_fds.size(); ++i) {

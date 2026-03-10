@@ -31,7 +31,6 @@ RequestParser::State RequestParser::parse(const char *data, size_t size, const N
 
 	_buffer.append(data, size);
 
-	// fin de ligne
 	if (_buffer.size() > DEFAULT_MAX_REQUEST_SIZE)
 	{
 		_errorCode = 413;

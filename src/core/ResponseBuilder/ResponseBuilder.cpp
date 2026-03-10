@@ -44,8 +44,7 @@ webserv::http::ResponseBuilder::build(const webserv::http::Request &req,
 
   std::string method = req.getMethod();
 
-  //   http://37.59.120.163:9003/login2.html   //SDU
-  req.print(); // SDU
+  req.print();
 
   if (method == "GET") {
     return Get::execute(req, config, route, client);
@@ -55,7 +54,6 @@ webserv::http::ResponseBuilder::build(const webserv::http::Request &req,
     return Delete::execute(req, config, route, client);
   }
 
-  // Méthode inconnue ou non gérée
   return generateError(501, config);
 }
 
@@ -116,7 +114,3 @@ webserv::http::ResponseBuilder::generateError(int code,
 
   return response.str();
 }
-
-// =============================================================================
-// 3. HELPERS
-// =============================================================================

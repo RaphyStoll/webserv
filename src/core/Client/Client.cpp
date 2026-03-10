@@ -12,37 +12,31 @@ using namespace webserv;
 webserv::core::Client::Client(int fd)
     : _logger("client"), _fd(fd), _fileFd(-1), _isChunked(false),
       _isExecutingCgi(false), _last_activity(NEW_CONNECTION_TIMEOUT) {
-  //_logger << "New Client connection on fd: " << fd << std::endl;
   _last_activity.touch(libftpp::time::Clock::now_ms());
 }
 
 webserv::core::Client::Client()
     : _logger("client"), _fd(-1), _fileFd(-1), _isChunked(false),
       _isExecutingCgi(false), _last_activity(NEW_CONNECTION_TIMEOUT) {
-  //_logger << "Default Client constructor" << std::endl;
 }
 
 webserv::core::Client::~Client() {
-  //_logger << "Client destructor called for fd: " << _fd << std::endl;
   if (_fileFd != -1) {
     close(_fileFd);
   }
 }
 
 int webserv::core::Client::getFd() const {
-  //_logger << "getFd called: " << _fd << std::endl;
+  _logger << "getFd called: " << _fd << std::endl;
   return _fd;
 }
 
-// webserv::http::RequestParser& webserv::core::Client::getParser() { return
-// _parser; }
+
 http::RequestParser &webserv::core::Client::getParser() {
-  //_logger << "getParser called" << std::endl;
   return _parser;
 }
 
 libftpp::Buffer::Buffer &webserv::core::Client::getResponseBuffer() {
-  //_logger << "getResponseBuffer called" << std::endl;
   return _response_buffer;
 }
 
@@ -63,7 +57,7 @@ void webserv::core::Client::setExecutingCgi(bool isExecuting) {
 // --- Gestion du Timeout ---
 
 void webserv::core::Client::updateLastActivity() {
-  //_logger << "Updating last activity for fd: " << _fd << std::endl;
+  _logger << "Updating last activity for fd: " << _fd << std::endl;
   _last_activity.touch(libftpp::time::Clock::now_ms());
 }
 

@@ -23,7 +23,6 @@ bool RequestParser::_parseHeader(const std::string &line) {
     return false;
   }
 
-  // trim les espaces de la valeur
   value = libftpp::str::StringUtils::trim(value);
 
   for (size_t i = 0; i < value.size(); ++i) {

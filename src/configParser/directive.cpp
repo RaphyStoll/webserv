@@ -161,7 +161,6 @@ void DataConfig::dir_route()
 		size_t n = libftpp::str::StringUtils::stoi(_token[_i]);
 		_currentRoute.redirect.insert(std::make_pair(n,_token[_i + 1]));
 		_i += 2;
-		//completer les verif de doublons et compagnie si besoin
 	}
 	else
 		throw std::runtime_error("Unknow route directive : " +  _token[_i]);

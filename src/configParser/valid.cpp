@@ -1,7 +1,7 @@
 #include"ConfigParser.hpp"
 
 
-static bool is_digit(char c) //SDU mettre ailleur?
+static bool is_digit(char c)
 {
 	return (c >= '0' && c <= '9');
 }
@@ -60,7 +60,6 @@ void DataConfig::valid_file()
 	}
 	s = _currentServer.root + "/" + s;
 
-	//std::cerr << "s = " << s << std::endl;
 	struct stat st;
 	if (stat(s.c_str(), &st) != 0)
 		throw std::runtime_error("file ko : " + _token[_i]);

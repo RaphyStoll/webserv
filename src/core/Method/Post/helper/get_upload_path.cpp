@@ -29,42 +29,29 @@ std::string webserv::http::Post::_getUploadPath(const std::string& reqPath, cons
     
     std::string targetDir;
 
-    // A. Choix du dossier racine
-    // Si la route a un "upload_path" activé et configuré, on l'utilise en priorité
     if (route.upload && !route.upload_path.empty()) {
         targetDir = route.upload_path;
     } 
     else {
-        // Sinon, on utilise la racine effective (Route Root > Server Root)
         targetDir = RouteMatcher::getEffectiveRoot(server, route);
     }
 
-    // B. Sécurisation du dossier cible (realpath)
     char resolvedRoot[PATH_MAX];
     if (realpath(targetDir.c_str(), resolvedRoot) == NULL) {
-        // Le dossier de destination n'existe pas ou est inaccessible
-        httpCode = 500; // Ou 404 selon la logique voulue
+        httpCode = 500;
         return "";
     }
     std::string absRoot = resolvedRoot;
 
-    // C. Construction du nom de fichier final
-    // Cas 1 : La requête contient le nom (ex: POST /uploads/image.png)
-    // On extrait juste le nom du fichier pour éviter les ../
     size_t lastSlash = reqPath.find_last_of('/');
     std::string filename = (lastSlash != std::string::npos) ? reqPath.substr(lastSlash + 1) : reqPath;
 
     if (filename.empty()) {
-        httpCode = 400; // Bad Request (POST sur un dossier sans nom de fichier)
+        httpCode = 400;
         return "";
     }
 
-    // D. Chemin final
     std::string fullPath = absRoot + "/" + filename;
-
-    // E. (Optionnel) Jail Check supplémentaire si nécessaire
-    // Ici absRoot est sûr grâce à realpath. On concatène juste un nom de fichier simple.
-    // Donc fullPath est techniquement dans absRoot.
 
     return fullPath;
 }

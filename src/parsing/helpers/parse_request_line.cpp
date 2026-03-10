@@ -6,10 +6,9 @@ using namespace webserv::http;
 
 bool RequestParser::_parseRequestLine(const std::string &line)
 {
-	std::istringstream iss(line); // en fait un stream, comme un std::cin
+	std::istringstream iss(line);
 	std::string method, uri, version;
 
-	// check si tout les tokens sont rempli
 	if (!(iss >> method >> uri >> version))
 		return false;
 
@@ -99,14 +98,14 @@ bool RequestParser::_isValidRequestTarget(const std::string &uri)
 	for (size_t i = 0; i < uri.size(); ++i)
 	{
 		unsigned char c = static_cast<unsigned char>(uri[i]);
-		if (c <= 0x20 || c == 0x7F) // virer tout ce qui est avant espace et le delete
+		if (c <= 0x20 || c == 0x7F)
 		{
 			_errorCode = 400;
 			return false;
 		}
 	}
 
-	if (uri == "*") // uniquement true si la method OPTIONS est utilisee
+	if (uri == "*")
 		return false;
 
 	return true;

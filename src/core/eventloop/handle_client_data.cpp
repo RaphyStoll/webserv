@@ -80,9 +80,6 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd,
           _cgiFds[pipeIn] = &client;
         }
 
-        // Initial Headers to support streaming. Connection: close is crucial
-        // to signal EOF to the browser after CGI stream ends without
-        // Content-Length.
         client.appendResponse("HTTP/1.1 200 OK\r\nConnection: close\r\n");
         _poll_fds[poll_index].events = POLLIN | POLLOUT;
       } else if (!responseData.empty()) {

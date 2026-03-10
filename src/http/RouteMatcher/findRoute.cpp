@@ -8,7 +8,6 @@ const RouteConfig& webserv::http::RouteMatcher::findRoute(const std::string& req
 	const RouteConfig* bestMatch = NULL;
 	size_t bestMatchLength = 0;
 
-	// On parcourt toutes les routes disponibles dans le serveur
 	for (size_t i = 0; i < routes.size(); ++i) {
 		const std::string& routePath = routes[i].path;
 		size_t len = routePath.length();

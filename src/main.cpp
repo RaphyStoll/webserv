@@ -9,27 +9,8 @@
 #include <map>
 
 using namespace webserv;
-
-//tmp
-// NetworkConfig mapConfig(const std::string& config_file) {
-// 	(void)config_file; //argv qui est le pathg du cofig file
-// 	NetworkConfig config;
-
-// 	ServerConfig1 srv1;
-// 	srv1.server_name = "localhost";
-// 	srv1.root = "/var/www/html";
-// 	config[9001].push_back(srv1);
-
-// 	ServerConfig1 srv2;
-// 	srv2.server_name = "admin";
-// 	srv2.root = "/var/www/admin";
-// 	config[9002].push_back(srv2);
-
-// 	return config;
-// }
-
-
-
+// TODO: nettoyer l'arbo www de -> site1 cree site 2
+// TODO: verifier si tout est ok -> config / est obligatoire ?
 int main(int argc, char** argv) {
 	
 	libftpp::debug::DebugLogger::cleanAll();
@@ -50,13 +31,12 @@ int main(int argc, char** argv) {
 
 		NetworkConfig net_config = data.cParser();
 
-		//TODO: boucle d'iterateur qui lance 1 boot strap par serveur
+		//TODO: boucle d'iterateur qui lance 1 boot strap par serveur -> test 2 serv mm port 2 ip diff
 		_logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
 		BootStrap bootstrap(net_config);
 
 		bootstrap.start();
 
-		// Note: Il faudra ajouter la config au constructeur d'EventLoop
 		webserv::core::EventLoop loop(bootstrap.getListenSockets(), net_config);
 		loop.run();
 

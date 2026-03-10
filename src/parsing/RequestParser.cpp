@@ -16,6 +16,8 @@ RequestParser::~RequestParser()
 	_cleanupTmpFile();
 }
 
+
+//TODO: check maxbody size, len de tout les chunk
 RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf) // SDU suppr namespace
 {
 	if (!_configResolved)

@@ -105,8 +105,6 @@ void webserv::core::Client::reset() {
     close(_fileFd);
     _fileFd = -1;
   }
-  // TODO RAPH:
-  // a use une fois implementer par seb
   _parser.reset();
   updateLastActivity();
 }

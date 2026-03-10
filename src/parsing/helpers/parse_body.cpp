@@ -289,7 +289,9 @@ std::string RequestParser::_generateTmpPath()
 bool RequestParser::_initTmpFile()
 {
 	_bodyTmpPath = _generateTmpPath();
+	std::cout << _bodyTmpPath << std::endl;
 	_bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
+	std::cout << _bodyTmpFd << std::endl;
 	if (_bodyTmpFd < 0)
 	{
 		_bodyTmpPath = _generateTmpPath();
@@ -302,8 +304,10 @@ bool RequestParser::_initTmpFile()
 	if (_request.getBodySize() > 0)
 	{
 		const std::string &existingBody = _request.getBody();
+		
 		if (!writeAll(_bodyTmpFd, existingBody.c_str(), existingBody.size()))
 		{
+			
 			_cleanupTmpFile();
 			return false;
 		}

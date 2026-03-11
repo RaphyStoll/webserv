@@ -1,18 +1,16 @@
 #ifndef CONFIGPARSER_HPP
 # define CONFIGPARSER_HPP
 
-#include <iostream>
+# include "libftpp.hpp"
+
 #include <vector>
 #include <map>
-#include <fstream>
 #include <string>
 #include <cctype>
-#include <stdexcept>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <cstdlib>
 
-#include "libftpp.hpp"
+#include <unistd.h>
+#include <sys/stat.h>
 
 #define MAX_BODY_SIZE_LIMIT 5000000//(1024 * 1024)
 #define MIN_BODY_SIZE_LIMIT 0

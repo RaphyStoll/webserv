@@ -1,19 +1,18 @@
-#include <cerrno>
-#include <cstring>
-#include <iostream>
-#include <sstream>
-#include <string>
-
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 #include "Client.hpp"
 #include "EventLoop.hpp"
 #include "Request.hpp"
 #include "RequestParser.hpp"
 #include "ResponseBuilder.hpp"
 #include "libftpp.hpp"
+
+#include <cerrno>
+#include <cstring>
+#include <iostream>
+#include <string>
+
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 using namespace libftpp::net;
 using namespace webserv;

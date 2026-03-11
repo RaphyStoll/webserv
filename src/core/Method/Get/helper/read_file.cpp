@@ -4,6 +4,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <fstream>
+
 using namespace webserv::http;
 
 // Lit tout le fichier dans une string (binaire compliant)

@@ -1,6 +1,8 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
+# include "libftpp.hpp"
+
 #include "ConfigParser.hpp"
 #include "Request.hpp"
 #include <string>

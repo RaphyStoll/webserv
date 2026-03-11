@@ -1,10 +1,10 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+# include "libftpp.hpp"
 #include "Cgi.hpp"
-#include "ConfigParser.hpp"
 #include "RequestParser.hpp"
-#include "libftpp.hpp"
+
 #include <string>
 
 namespace webserv {

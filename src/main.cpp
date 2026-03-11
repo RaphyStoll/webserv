@@ -5,8 +5,6 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
-#include <map>
 
 using namespace webserv;
 // TODO: time out cgi

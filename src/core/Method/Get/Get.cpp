@@ -1,3 +1,9 @@
+#include "Get.hpp"
+#include "Request.hpp"
+#include "ResponseBuilder.hpp"
+#include "RouteMatcher.hpp"
+#include "libftpp.hpp"
+
 #include <climits>
 #include <cstdlib>
 #include <ctime>
@@ -10,12 +16,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#include "Get.hpp"
-#include "Request.hpp"
-#include "ResponseBuilder.hpp"
-#include "RouteMatcher.hpp"
-#include "libftpp.hpp"
 
 using namespace webserv::http;
 

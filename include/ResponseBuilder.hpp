@@ -1,18 +1,14 @@
 #ifndef RESPONSEBUILDER_HPP
 #define RESPONSEBUILDER_HPP
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
+#include "Client.hpp"
 #include <string>
+# include "libftpp.hpp"
 
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "Client.hpp"
 #include "Request.hpp"
-#include "libftpp.hpp"
 
 namespace webserv {
 namespace http {

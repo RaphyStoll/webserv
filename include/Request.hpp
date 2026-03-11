@@ -1,11 +1,11 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+# include "libftpp.hpp"
+
 #include <cstddef>
 #include <map>
 #include <string>
-
-#include "libftpp.hpp"
 
 namespace webserv
 {

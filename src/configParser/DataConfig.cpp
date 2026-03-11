@@ -1,4 +1,5 @@
 # include "ConfigParser.hpp"
+#include <fstream>
 
 DataConfig::DataConfig() : 	_i(0), _state(GLOBAL)
 {

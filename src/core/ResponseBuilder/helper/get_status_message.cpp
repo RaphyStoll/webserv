@@ -1,6 +1,6 @@
-#include <string>
-#include <iostream>
 #include "ResponseBuilder.hpp"
+
+#include <string>
 
 // https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Status
 std::string webserv::http::ResponseBuilder::getStatusMessage(int code) {

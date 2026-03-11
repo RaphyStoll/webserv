@@ -1,8 +1,7 @@
-#include <unistd.h>
-
 #include "Client.hpp"
-
 #include "RequestParser.hpp"
+
+#include <unistd.h>
 
 #define NEW_CONNECTION_TIMEOUT 60000 // 1000 = 1s
 

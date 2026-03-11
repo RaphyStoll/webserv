@@ -1,21 +1,17 @@
 #ifndef EVENTLOOP_HPP
 #define EVENTLOOP_HPP
 
-#include <climits>
+#include "Client.hpp"
+#include "Request.hpp"
+# include "libftpp.hpp"
+
 #include <cstdlib>
 #include <map>
-#include <string>
 #include <vector>
 
 #include <poll.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include "Client.hpp"
-#include "Request.hpp"
-#include "RequestParser.hpp"
-#include "SignalHandler.hpp"
-#include "libftpp.hpp"
 
 enum Method { ERROR, GET, DELETE, POST };
 namespace webserv {

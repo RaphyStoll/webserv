@@ -1,16 +1,19 @@
 #include "RequestParser.hpp"
+
 #include <cctype>
 #include <cstddef>
 #include <cstdlib>
 #include <sstream>
+#include <ctime>
+#include <climits>
+#include <cerrno>
+
+
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
-#include <climits>
-#include <cerrno>
 
 using namespace webserv::http;
 

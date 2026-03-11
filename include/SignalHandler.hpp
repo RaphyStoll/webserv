@@ -1,6 +1,8 @@
 #ifndef SIGNALHANDLER_HPP
 # define SIGNALHANDLER_HPP
 
+# include "libftpp.hpp"
+
 # include <csignal>
 
 namespace webserv

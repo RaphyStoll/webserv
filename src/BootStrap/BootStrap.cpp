@@ -1,5 +1,4 @@
 #include <cstring>
-#include <stdexcept>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,7 +7,6 @@
 #include <fcntl.h>
 
 #include "../../include/BootStrap.hpp"
-#include "../../lib/LIBFTPP/include/libftpp.hpp"
 
 using namespace libftpp::net;
 using namespace libftpp::str;

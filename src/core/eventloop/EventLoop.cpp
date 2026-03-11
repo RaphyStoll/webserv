@@ -1,11 +1,12 @@
 #include "EventLoop.hpp"
 #include "libftpp.hpp"
-
+#include "SignalHandler.hpp"
 #include <iostream>
 #include <cstring>
 #include <cerrno>
 #include <sstream>
 
+#include <signal.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

@@ -49,6 +49,7 @@ namespace webserv
 			State _state;
 			std::string _buffer;
 			int _errorCode;
+			size_t _totalChunkRead;
 
 			unsigned long _contentLength;
 			unsigned long _maxBodySize;

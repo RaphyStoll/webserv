@@ -6,7 +6,7 @@
 using namespace webserv::http;
 
 RequestParser::RequestParser()
-	: _state(PARSING_REQUEST), _buffer(""), _errorCode(0), _contentLength(0),
+	: _state(PARSING_REQUEST), _buffer(""), _errorCode(0), _totalChunkRead(0),_contentLength(0),
 	  _maxBodySize(1048576), _bodyBytesRemaining(0), _currentChunkSize(0),
 	  _chunkBytesRemaining(0), _seenContentLength(false), _contentLengthHeaderValue(""),
 	  _hasTransferEncoding(false), _headerCount(0), _bodyTmpFd(-1), _usingTmpFile(false) {}

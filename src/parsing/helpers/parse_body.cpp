@@ -190,12 +190,14 @@ RequestParser::State RequestParser::_parseChunkedBody()
 				return ERROR;
 			}
 
-			if (_currentChunkSize > _maxBodySize || _request.getBodySize() + _currentChunkSize > _maxBodySize)
+			if (_totalChunkRead + _currentChunkSize > _maxBodySize)
 			{
 				_errorCode = 413;
 				_cleanupTmpFile();
 				return ERROR;
 			}
+			
+			_totalChunkRead += _currentChunkSize;
 
 			if (_currentChunkSize == 0)
 			{

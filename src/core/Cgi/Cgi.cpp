@@ -104,13 +104,11 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
               const RouteConfig &route) {
   libftpp::debug::DebugLogger _logger("cgi");
 
-  // Création des deux pipes
   if (pipe(_pipeIn) == -1 || pipe(_pipeOut) == -1) {
     _logger << "CGI pipe creation failed" << std::endl;
     return false;
   }
 
-  // Rend les extrémités utilisées par le serveur non-bloquantes (IMPORTANT!)
   libftpp::net::set_non_blocking(_pipeIn[1]);
   libftpp::net::set_non_blocking(_pipeOut[0]);
 
@@ -122,13 +120,10 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
   }
 
   if (_pid == 0) {
-    // --- PROCESSUS ENFANT ---
-    // Redirige stdin vers le read end de _pipeIn
+    // CHILD
     dup2(_pipeIn[0], STDIN_FILENO);
-    // Redirige stdout vers le write end de _pipeOut
     dup2(_pipeOut[1], STDOUT_FILENO);
 
-    // Ferme tous les fds copiés inutiles dans l'enfant
     close(_pipeIn[0]);
     close(_pipeIn[1]);
     close(_pipeOut[0]);
@@ -141,26 +136,46 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
     }
     env.push_back(NULL);
 
-    char *root = const_cast<char *>(route.root.c_str()); // TODO: matcher les routes
-    char *args[] = {root, NULL};
+    std::string effectiveRoute = webserv::http::RouteMatcher::getEffectiveRoot(config, route);
+    std::string reqPath = req.getPath();
+    std::string fullPath;
+
+    if (reqPath.find(route.path) == 0) {
+      std::string suffix = reqPath.substr(route.path.length());
+      fullPath = libftpp::str::PathUtils::join(effectiveRoute, suffix);
+    } else {
+      fullPath = libftpp::str::PathUtils::join(effectiveRoute, reqPath);
+    }
+
+    std::string executable = route.cgi_path.empty() ? fullPath : route.cgi_path;
+    
+    std::vector<char *> args_vec;
+    if (!route.cgi_path.empty()) {
+      args_vec.push_back(const_cast<char *>(route.cgi_path.c_str()));
+    }
+    args_vec.push_back(const_cast<char *>(fullPath.c_str()));
+    args_vec.push_back(NULL);
 
 	_logger << "-----------------------------------" << std::endl;
-	_logger << "args[0]" << args[0] << std::endl;
-	_logger << "args[1]" << args[1] << std::endl;
-	_logger << "root = " << root << std::endl;
+	for (size_t i = 0; i < args_vec.size(); i++) {
+		if (args_vec[i] != NULL) {
+			_logger << "args_vec[" << i << "]: " << args_vec[i] << std::endl;
+		}
+	}
+	_logger << "executable = " << executable << std::endl;
+
 	for (size_t i = 0; i < env.size(); i++) {
         if (env[i] != NULL) {
             _logger << "env[" << i << "]: " << env[i] << std::endl;
         }
     }
-    execve(root, args, env.data());
+    execve(executable.c_str(), args_vec.data(), env.data());
 	_logger << "execve fail" << std::endl;
     perror("execve");
     _exit(1);
   }
 
-  // --- PROCESSUS PARENT ---
-  // Ferme les extrémités que seul le CGI utilise
+  // PARENT
   close(_pipeIn[0]);
   _pipeIn[0] = -1;
   close(_pipeOut[1]);

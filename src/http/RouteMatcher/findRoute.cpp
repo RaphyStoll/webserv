@@ -37,16 +37,10 @@ const RouteConfig& webserv::http::RouteMatcher::findRoute(const std::string& req
 	
 	if (bestMatch) {
 		_logger << "Best route match found: " << bestMatch->path << std::endl;
+		return *bestMatch;
 	} else {
 		_logger << "No matching route found, fallback to default." << std::endl;
+		static const RouteConfig defaultFallbackRoute;
+		return defaultFallbackRoute;
 	}
-
-	// Sécurité : Si aucune route ne correspond (théoriquement impossible si "/" existe)
-	// On retourne la première route (souvent la default) ou on lance une exception.
-	if (bestMatch == NULL && !routes.empty()) {
-		return routes[0]; 
-	}
-	
-	// Si bestMatch est NULL ici, c'est que la config est vide -> Crash ou Default
-	return *bestMatch;
 }

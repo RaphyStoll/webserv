@@ -60,6 +60,7 @@ RequestParser::State RequestParser::_parseHeadersState() {
 
     if (endOfLine == 0) {
       _buffer.erase(0, 2);
+      _resolveConfigLimits();
       return _determineBodyParsing();
     }
 

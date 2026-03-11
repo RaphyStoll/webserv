@@ -92,8 +92,12 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd,
       }
 
     } else if (state == http::RequestParser::ERROR) {
-      _logger << "[EventLoop] Parsing error on fd " << client_fd << std::endl;
-      _close_connection(client_fd, poll_index);
+		int errorCode = parser.getErrorCode();
+    	_logger << "[EventLoop] Parsing error on fd " << client_fd << " with code " << errorCode << std::endl;
+    	const ServerConfig &srvConfig = _getServerConfig(client_fd, parser.getRequest());
+    	std::string errorResponse = webserv::http::ResponseBuilder::generateError(errorCode, srvConfig);
+		client.appendResponse(errorResponse);
+    	_poll_fds[poll_index].events = POLLIN | POLLOUT;
     }
   }
 }

@@ -16,14 +16,11 @@ RequestParser::~RequestParser()
 	_cleanupTmpFile();
 }
 
-
-//TODO: check maxbody size, len de tout les chunk
 RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf) // SDU suppr namespace
 {
 	if (!_configResolved)
 	{
 		_config = &conf;
-		_resolveConfigLimits();
 	}
 
 	if (_state == COMPLETE || _state == ERROR)
@@ -52,7 +49,6 @@ RequestParser::State RequestParser::parse(const char *data, size_t size, const N
 			if (_state == PARSING_BODY_LENGTH || _state == PARSING_CHUNK_SIZE ||
 				_state == COMPLETE)
 			{
-				_resolveConfigLimits();
 				if (!_validateHeaders())
 				{
 					_state = ERROR;
@@ -88,7 +84,7 @@ void RequestParser::reset()
 	_buffer.clear();
 	_errorCode = 0;
 	_contentLength = 0;
-	_maxBodySize = DEFAULT_MAX_BODY_SIZE; // TODO: iterer sur _config pour le bdy size de la config
+	_maxBodySize = DEFAULT_MAX_BODY_SIZE;
 	_bodyBytesRemaining = 0;
 	_currentChunkSize = 0;
 	_chunkBytesRemaining = 0;

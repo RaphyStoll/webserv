@@ -9,8 +9,6 @@
 #include <map>
 
 using namespace webserv;
-// TODO: nettoyer l'arbo www de -> site1 cree site 2
-// TODO: verifier si tout est ok -> config / est obligatoire ?
 // TODO: time out cgi
 int main(int argc, char** argv) {
 	

@@ -8,7 +8,6 @@
 #include <fcntl.h>
 
 #include "../../../include/BootStrap.hpp"
-#include "../../../lib/LIBFTPP/include/libftpp.hpp"
 
 using namespace libftpp::net;
 using namespace libftpp::str;
@@ -22,20 +21,7 @@ void BootStrap::_setup_sockets()
 
 			if (it->second.empty()) continue; 
 
-			std::string host = it->second.front().listen;
-			if (host.empty())
-				host = "0.0.0.0";
-			
-			try {
-				int sock_fd = _create_listener_socket(port, host);
-				_listen_sockets.push_back(sock_fd);
-
-				std::cout << "Listening on http://" << host << ":" << port << std::endl;
-				_logger << "[BootStrap] Listening on http://" << host << ":" << port << " (fd: " << sock_fd << ")" << std::endl;
-			} catch (const std::exception& e) {
-				std::cerr << "Error: Could not bind port " << port << ": " << e.what() << std::endl;
-				_logger << "[BootStrap] Failed to bind port " << port << ": " << e.what() << std::endl;
-			}
+			_bind_servers_for_port(port, it->second);
 		}
 
 		if (_listen_sockets.empty()) {

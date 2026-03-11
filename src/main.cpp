@@ -19,7 +19,12 @@ int main(int argc, char** argv) {
 	DataConfig data;
 	libftpp::debug::DebugLogger _logger("Main");
 	_logger << "Server started" << std::endl;
+
+#ifdef __APPLE__
+	data.config_path = "config/config_formac.conf";
+#else
 	data.config_path = "config/config.conf";
+#endif
 
 	if (argc > 1) {
 		data.config_path = argv[1];
@@ -30,7 +35,6 @@ int main(int argc, char** argv) {
 
 		NetworkConfig net_config = data.cParser();
 
-		//TODO: boucle d'iterateur qui lance 1 boot strap par serveur -> test 2 serv mm port 2 ip diff
 		_logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
 		BootStrap bootstrap(net_config);
 

@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
+#include <climits>
 
 using namespace webserv::http;
 

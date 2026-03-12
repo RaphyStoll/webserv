@@ -143,10 +143,20 @@ webserv::http::Get::_displayAutoIndex(const std::string &path,
     if (S_ISDIR(st.st_mode))
       name += "/";
 
-    html << "<a href=\"" << name << "\">" << name << "</a>\n";
-    html << "\n";
+	std::ostringstream size_str;
+  	if (S_ISDIR(st.st_mode)) {
+    	size_str << "-";
+  	} else {
+    	size_str << st.st_size << "K";
+  	}
+  	html << "<a href=\"" << name << "\">" << name << "</a>";
+  	html << std::setw(20 - name.length()) << " " << size_str.str() 
+		<< std::setw(20 - size_str.str().length()) << " " 
+		<< ctime (&st.st_mtime) << "\n";
   }
   closedir(dir);
+
+  // fun stuff
   html << "</pre><hr>";
   html << "<script>function a() { setInterval(bg, "
           "250);alert(\"hehe..\");function bg() {var col =\"#\" + "

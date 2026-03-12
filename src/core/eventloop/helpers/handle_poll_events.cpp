@@ -1,6 +1,7 @@
 #include <cerrno>
 #include <cstring>
 #include <string>
+#include <cstdio>
 
 #include <arpa/inet.h>
 #include <fcntl.h>

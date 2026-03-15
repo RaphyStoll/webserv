@@ -60,12 +60,12 @@ void webserv::core::Client::updateLastActivity() {
 
 bool webserv::core::Client::hasTimedOut(
     unsigned long long now_ms, unsigned long long timeout_limit) const {
-  return _last_activity.expired(now_ms, timeout_limit);
+  return _last_activity.elapsed_since(now_ms) >= timeout_limit;
 }
 
 bool webserv::core::Client::hasCgiTimedOut(
     unsigned long long now_ms, unsigned long long cgi_timeout_limit) const {
-  return _isExecutingCgi && _cgi_start_time.expired(now_ms, cgi_timeout_limit);
+  return _isExecutingCgi && _cgi_start_time.elapsed_since(now_ms) >= cgi_timeout_limit;
 }
 
 void webserv::core::Client::appendResponse(const std::string &data) {

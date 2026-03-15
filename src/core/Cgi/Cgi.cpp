@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -29,11 +30,6 @@ Cgi &Cgi::operator=(const Cgi &other) {
     _pipeIn[1] = other._pipeIn[1];
     _pipeOut[0] = other._pipeOut[0];
     _pipeOut[1] = other._pipeOut[1];
-    // En C++98, on s'assure que si une copie est faite (ex: dans std::map),
-    // l'objet original (souvent temporaire) ne ferme pas les fd.
-    // On "vole" donc les fd à la source si elle est temporaire, sans
-    // const_cast, ce cas n'arrive qu'à la création du Client où fds = -1 de
-    // toute façon.
   }
   return *this;
 }
@@ -58,11 +54,18 @@ void Cgi::reset() {
     _pipeOut[1] = -1;
   }
   if (_pid > 0) {
+    killProcess();
+  }
+  _bodyBytesWritten = 0;
+}
+
+void Cgi::killProcess() {
+  if (_pid > 0) {
+    kill(_pid, SIGKILL);
     int status;
     waitpid(_pid, &status, WNOHANG);
     _pid = -1;
   }
-  _bodyBytesWritten = 0;
 }
 
 int Cgi::getPipeInWriteFd() const { return _pipeIn[1]; }
@@ -137,7 +140,8 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
     }
     env.push_back(NULL);
 
-    std::string effectiveRoute = webserv::http::RouteMatcher::getEffectiveRoot(config, route);
+    std::string effectiveRoute =
+        webserv::http::RouteMatcher::getEffectiveRoot(config, route);
     std::string reqPath = req.getPath();
     std::string fullPath;
 
@@ -149,7 +153,7 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
     }
 
     std::string executable = route.cgi_path.empty() ? fullPath : route.cgi_path;
-    
+
     std::vector<char *> args_vec;
     if (!route.cgi_path.empty()) {
       args_vec.push_back(const_cast<char *>(route.cgi_path.c_str()));
@@ -157,21 +161,21 @@ bool Cgi::run(const Request &req, const ServerConfig &config,
     args_vec.push_back(const_cast<char *>(fullPath.c_str()));
     args_vec.push_back(NULL);
 
-	_logger << "-----------------------------------" << std::endl;
-	for (size_t i = 0; i < args_vec.size(); i++) {
-		if (args_vec[i] != NULL) {
-			_logger << "args_vec[" << i << "]: " << args_vec[i] << std::endl;
-		}
-	}
-	_logger << "executable = " << executable << std::endl;
+    _logger << "-----------------------------------" << std::endl;
+    for (size_t i = 0; i < args_vec.size(); i++) {
+      if (args_vec[i] != NULL) {
+        _logger << "args_vec[" << i << "]: " << args_vec[i] << std::endl;
+      }
+    }
+    _logger << "executable = " << executable << std::endl;
 
-	for (size_t i = 0; i < env.size(); i++) {
-        if (env[i] != NULL) {
-            _logger << "env[" << i << "]: " << env[i] << std::endl;
-        }
+    for (size_t i = 0; i < env.size(); i++) {
+      if (env[i] != NULL) {
+        _logger << "env[" << i << "]: " << env[i] << std::endl;
+      }
     }
     execve(executable.c_str(), args_vec.data(), env.data());
-	_logger << "execve fail" << std::endl;
+    _logger << "execve fail" << std::endl;
     perror("execve");
     _exit(1);
   }

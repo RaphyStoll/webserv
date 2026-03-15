@@ -7,45 +7,46 @@
 #include <string>
 
 using namespace webserv;
-// TODO: time out cgi
-int main(int argc, char** argv) {
-	
-	libftpp::debug::DebugLogger::cleanAll();
 
-	SignalHandler::setup();
+int main(int argc, char **argv) {
 
-	DataConfig data;
-	libftpp::debug::DebugLogger _logger("Main");
-	_logger << "Server started" << std::endl;
+  libftpp::debug::DebugLogger::cleanAll();
+
+  SignalHandler::setup();
+
+  DataConfig data;
+  libftpp::debug::DebugLogger _logger("Main");
+  _logger << "Server started" << std::endl;
 
 #ifdef __APPLE__
-	data.config_path = "config/config_formac.conf";
+  data.config_path = "config/config_formac.conf";
 #else
-	data.config_path = "config/config.conf";
+  data.config_path = "config/config.conf";
 #endif
 
-	if (argc > 1) {
-		data.config_path = argv[1];
-	}
-	try {
+  if (argc > 1) {
+    data.config_path = argv[1];
+  }
+  try {
 
-		_logger << "[Main] Loading configuration from " << data.config_path << "..." << std::endl;
+    _logger << "[Main] Loading configuration from " << data.config_path << "..."
+            << std::endl;
 
-		NetworkConfig net_config = data.cParser();
+    NetworkConfig net_config = data.cParser();
 
-		_logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
-		BootStrap bootstrap(net_config);
+    _logger << "[Main] Config loaded. Initializing BootStrap..." << std::endl;
+    BootStrap bootstrap(net_config);
 
-		bootstrap.start();
+    bootstrap.start();
 
-		webserv::core::EventLoop loop(bootstrap.getListenSockets(), net_config);
-		loop.run();
+    webserv::core::EventLoop loop(bootstrap.getListenSockets(), net_config);
+    loop.run();
 
-		_logger << "[Main] Server shutdown complete" << std::endl;
+    _logger << "[Main] Server shutdown complete" << std::endl;
 
-	} catch (const std::exception& e) {
-		std::cerr << "Fatal Error: " << e.what() << std::endl;
-		return 1;
-	}
-	return 0;
+  } catch (const std::exception &e) {
+    std::cerr << "Fatal Error: " << e.what() << std::endl;
+    return 1;
+  }
+  return 0;
 }

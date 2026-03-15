@@ -20,6 +20,7 @@ public:
   Cgi &operator=(const Cgi &other);
 
   void reset();
+  void killProcess();
 
   // Lance l'exécution. fork et execve. Retourne true si succès.
   bool run(const http::Request &req, const ServerConfig &config,

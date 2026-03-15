@@ -52,7 +52,6 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
     return _logger << fullPath << " don't exist" << std::endl,
            ResponseBuilder::generateError(404, config);
 
-  // index et auto index
   if (libftpp::str::PathUtils::isDirectory(fullPath)) {
 
     std::string indexName;

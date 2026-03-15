@@ -52,7 +52,7 @@ bool writeCgiBodyFromTmpFile(int pipeFd, webserv::core::Cgi &cgi,
   return true;
 }
 
-}
+} // namespace
 
 void webserv::core::EventLoop::_handle_poll_events() {
   for (size_t i = 0; i < _poll_fds.size(); ++i) {
@@ -274,10 +274,6 @@ void webserv::core::EventLoop::_handle_poll_events() {
             i--;
             continue;
           } else {
-            // Si on est en train d'exécuter un CGI mais qu'on a fini d'envoyer
-            // le buffer actuel, on arrête de surveiller POLLOUT pour ce client
-            // afin de ne pas boucler à 100% CPU. On le réactivera quand le CGI
-            // nous enverra de nouvelles données !
             _poll_fds[i].events = POLLIN;
           }
         }

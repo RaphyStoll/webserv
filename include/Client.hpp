@@ -31,11 +31,14 @@ public:
   webserv::core::Cgi &getCgi();
   bool isExecutingCgi() const;
   void setExecutingCgi(bool isExecuting);
+  void markCgiStartTime();
 
   // Gestion du Timeout
   void updateLastActivity();
   bool hasTimedOut(unsigned long long now_ms,
                    unsigned long long timeout_limit) const;
+  bool hasCgiTimedOut(unsigned long long now_ms,
+                      unsigned long long cgi_timeout_limit) const;
 
   // Gestion des données
   void appendResponse(const std::string &data);
@@ -51,6 +54,7 @@ private:
   webserv::core::Cgi _cgi;
   webserv::http::RequestParser _parser;
   libftpp::time::Timeout _last_activity;
+  libftpp::time::Timeout _cgi_start_time;
   libftpp::Buffer::Buffer _response_buffer;
 };
 

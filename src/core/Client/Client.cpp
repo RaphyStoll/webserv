@@ -10,14 +10,13 @@ using namespace webserv;
 
 webserv::core::Client::Client(int fd)
     : _logger("client"), _fd(fd), _fileFd(-1), _isChunked(false),
-      _isExecutingCgi(false), _last_activity(NEW_CONNECTION_TIMEOUT) {
+      _isExecutingCgi(false), _last_activity(0), _cgi_start_time(0) {
   _last_activity.touch(libftpp::time::Clock::now_ms());
 }
 
 webserv::core::Client::Client()
     : _logger("client"), _fd(-1), _fileFd(-1), _isChunked(false),
-      _isExecutingCgi(false), _last_activity(NEW_CONNECTION_TIMEOUT) {
-}
+      _isExecutingCgi(false), _last_activity(0), _cgi_start_time(0) {}
 
 webserv::core::Client::~Client() {
   if (_fileFd != -1) {
@@ -30,10 +29,7 @@ int webserv::core::Client::getFd() const {
   return _fd;
 }
 
-
-http::RequestParser &webserv::core::Client::getParser() {
-  return _parser;
-}
+http::RequestParser &webserv::core::Client::getParser() { return _parser; }
 
 libftpp::Buffer::Buffer &webserv::core::Client::getResponseBuffer() {
   return _response_buffer;
@@ -53,7 +49,9 @@ void webserv::core::Client::setExecutingCgi(bool isExecuting) {
   _isExecutingCgi = isExecuting;
 }
 
-// --- Gestion du Timeout ---
+void webserv::core::Client::markCgiStartTime() {
+  _cgi_start_time.touch(libftpp::time::Clock::now_ms());
+}
 
 void webserv::core::Client::updateLastActivity() {
   _logger << "Updating last activity for fd: " << _fd << std::endl;
@@ -62,14 +60,13 @@ void webserv::core::Client::updateLastActivity() {
 
 bool webserv::core::Client::hasTimedOut(
     unsigned long long now_ms, unsigned long long timeout_limit) const {
-  (void)timeout_limit;
-  bool timedOut = _last_activity.expired(now_ms);
-  if (timedOut)
-    _logger << "Client on fd: " << _fd << " has timed out" << std::endl;
-  return timedOut;
+  return _last_activity.expired(now_ms, timeout_limit);
 }
 
-// --- Gestion des données ---
+bool webserv::core::Client::hasCgiTimedOut(
+    unsigned long long now_ms, unsigned long long cgi_timeout_limit) const {
+  return _isExecutingCgi && _cgi_start_time.expired(now_ms, cgi_timeout_limit);
+}
 
 void webserv::core::Client::appendResponse(const std::string &data) {
   _logger << "Appending " << data.size()

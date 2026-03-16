@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Webserv 42 | Dashboard</title>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <nav class="sidebar">
+      <div class="logo">Webserv</div>
+      <ul class="nav-links">
+        <li><a href="/" class="active">Dashboard</a></li>
+        <li><a href="/tests/methods.html">HTTP Methods</a></li>
+        <li><a href="/upload/index.html">File Uploads</a></li>
+        <li><a href="/cgi-bin/demo.html">CGI Demo</a></li>
+        <li><a href="/manager.html">File Manager (DELETE)</a></li>
+      </ul>
+    </nav>
+    <main class="content">
+      <header>
+        <h1>Server Overview</h1>
+        <span class="status-badge online">Running (poll)</span>
+      </header>
+
+      <section class="cards-grid">
+        <div class="card">
+          <h3>👥 Team</h3>
+          <p>Welcome to_ our custom C++98 HTTP/1.1 Server.</p>
+          <p style="margin-top: 0.5rem; color: var(--text-muted)">
+            Built by <strong>Raphalme Scuthber</strong> &
+            <strong>Sydubois</strong> for the 42 Network.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>⚡ Features</h3>
+          <ul
+            style="
+              margin-left: 1.5rem;
+              margin-top: 0.5rem;
+              color: var(--text-muted);
+            "
+          >
+            <li>Native Non-blocking I/O (poll)</li>
+            <li>Virtual Servers Validation</li>
+            <li>Chunked Transfer-Encoding</li>
+            <li>Standard POST File Uploads</li>
+            <li>Secure DELETE Executions</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>📌 Testing Nodes</h3>
+          <p
+            style="
+              font-size: 0.9em;
+              color: var(--text-muted);
+              margin-bottom: 0.5rem;
+            "
+          >
+            The sidebar provides tools to fully test the server:
+          </p>
+          <ul
+            style="
+              margin-left: 1.5rem;
+              margin-bottom: 1rem;
+              color: var(--text-muted);
+              font-size: 0.85em;
+            "
+          >
+            <li>
+              <strong>Methods:</strong> Tests standard GET queries and POST
+              url-encoded forms.
+            </li>
+            <li>
+              <strong>Uploads:</strong> Tests non-blocking internal file
+              transferring via pure POST.
+            </li>
+            <li>
+              <strong>Manager:</strong> Scans the actual upload folder to let
+              you securely DELETE real files.
+            </li>
+            <li>
+              <strong>CGI:</strong> Demonstrates dynamic execution via child
+              processes.
+            </li>
+          </ul>
+          <a
+            href="/tests/methods.html"
+            class="btn btn-primary"
+            style="width: 100%"
+            >Start Testing Methods</a
+          >
+        </div>
+      </section>
+
+      <h2>Recent Logs (/log/general.log)</h2>
+      <div class="terminal" id="serverLogs">Loading live server logs...</div>
+    </main>
+  </body>
+</html>

@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdio>
 
 #include "ConfigParser.hpp"
 #include "Delete.hpp"
@@ -83,7 +84,7 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
       std::string tmpPath = req.getBodyTmpPath();
       if (!tmpPath.empty())
 
-        unlink(tmpPath.c_str());
+        std::remove(tmpPath.c_str());
     }
 
     if (!writeSuccess) {

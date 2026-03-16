@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <sstream>
+#include <cstdio>
+
+
 
 #include <fcntl.h>
 #include <sys/fcntl.h>
@@ -275,7 +278,7 @@ void RequestParser::_cleanupTmpFile() {
       _bodyTmpFd = -1;
     }
     if (!_bodyTmpPath.empty()) {
-      unlink(_bodyTmpPath.c_str());
+      std::remove(_bodyTmpPath.c_str());
       _bodyTmpPath.clear();
     }
     _usingTmpFile = false;

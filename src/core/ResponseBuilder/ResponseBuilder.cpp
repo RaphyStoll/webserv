@@ -72,16 +72,7 @@ webserv::http::ResponseBuilder::generateError(int code,
 
   std::map<int, std::string>::const_iterator it = config.error_pages.find(code);
   if (it != config.error_pages.end()) {
-    std::string filePath = config.root + it->second;
-
-    // Si le chemin dans config commence par '/', on le concatène (ou pas selon
-    // ta logique de parsing) Ici je suppose que it->second est "/404.html" et
-    // qu'on doit le chercher dans la root. Si ton parser gère déjà le path
-    // absolu, adapte cette ligne :
-    if (it->second[0] != '/')
-      filePath = config.root + "/" + it->second;
-    else
-      filePath = config.root + it->second;
+    std::string filePath = it->second;
 
     struct stat s;
     if (::stat(filePath.c_str(), &s) == 0 && !(s.st_mode & S_IFDIR) &&
@@ -100,7 +91,7 @@ webserv::http::ResponseBuilder::generateError(int code,
         << "</title></head>";
     oss << "<body style=\"font-family: sans-serif; text-align: center; "
            "padding: 50px;\">";
-    oss << "<h1>Error " << code << "</h1>";
+    oss << "<h1>Errorr " << code << "</h1>";
     oss << "<h2>" << msg << "</h2>";
     oss << "<hr><p>webserv/1.0</p></body></html>";
     body = oss.str();

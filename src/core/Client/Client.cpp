@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 
-#define NEW_CONNECTION_TIMEOUT 60000 // 1000 = 1s
+
 
 using namespace webserv::core;
 using namespace webserv;
@@ -46,6 +46,9 @@ void webserv::core::Client::setChunked(bool chunked) { _isChunked = chunked; }
 webserv::core::Cgi &webserv::core::Client::getCgi() { return _cgi; }
 bool webserv::core::Client::isExecutingCgi() const { return _isExecutingCgi; }
 void webserv::core::Client::setExecutingCgi(bool isExecuting) {
+  if (!_isExecutingCgi && isExecuting) {
+    markCgiStartTime();
+  }
   _isExecutingCgi = isExecuting;
 }
 

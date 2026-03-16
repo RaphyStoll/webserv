@@ -1,4 +1,5 @@
 #include "EventLoop.hpp"
+#include "Client.hpp"
 #include <signal.h>
 #include <sys/types.h>
 
@@ -21,21 +22,21 @@ void webserv::core::EventLoop::_check_timeouts() {
     if (it != _clients.end()) {
       webserv::core::Client &client = it->second;
 
-      if (client.hasTimedOut(now, 60000)) {
+      if (client.hasTimedOut(now, NEW_CONNECTION_TIMEOUT)) {
         _logger << "[EventLoop] Timeout expired for fd " << fd
                 << " - Closing connection." << std::endl;
         _close_connection(fd, i);
         continue;
       }
 
-      if (client.hasCgiTimedOut(now, 60000)) { // Assuming CGI timeout is also 60s
+      if (client.hasCgiTimedOut(now, CGI_TIMEOUT)) {
         _logger << "[EventLoop] CGI Timeout expired for fd " << fd
                 << " - Killing CGI process." << std::endl;
         if (client.getCgi().getPid() > 0) {
           kill(client.getCgi().getPid(), SIGKILL);
         }
-        // TODO: Optionally send a 504 Gateway Timeout response here before closing,
-        // or let the CGI pipe close handle it depending on design.
+
+        // TODO: lancer 504 ou close depend de la da,
         _close_connection(fd, i);
         continue;
       }

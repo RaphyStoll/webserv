@@ -7,6 +7,9 @@
 
 #include <string>
 
+#define NEW_CONNECTION_TIMEOUT 1000 * 60 // 1000 = 1s
+#define CGI_TIMEOUT 1000 * 30
+
 namespace webserv {
 namespace core {
 

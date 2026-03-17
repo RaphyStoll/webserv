@@ -30,7 +30,8 @@ private:
 
   // Construit la string finale HTTP 200 OK
   static std::string _createSuccessResponse(const std::string &content,
-                                            const std::string &path);
+                                            const std::string &path,
+                                            bool keepAlive = false);
 
 			// helper
 			static std::string _readFile(const std::string& path);

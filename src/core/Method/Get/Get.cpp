@@ -71,8 +71,8 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
       if (route.directory_listing) {
         std::string htmlContent = _displayAutoIndex(fullPath, req.getPath());
         if (htmlContent.empty())
-          return ResponseBuilder::generateError(500, config);
-        return _createSuccessResponse(htmlContent, "index.html");
+          return ResponseBuilder::generateError(500, config, req.keepAlive());
+        return _createSuccessResponse(htmlContent, "index.html", req.keepAlive());
       }
       return _logger << "no route.directory_listing for auto index"
                      << std::endl,
@@ -111,7 +111,7 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
            ResponseBuilder::generateError(500, config);
   }
 
-  return _createSuccessResponse(content, fullPath);
+  return _createSuccessResponse(content, fullPath, req.keepAlive());
 }
 
 std::string

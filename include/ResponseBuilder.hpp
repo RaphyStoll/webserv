@@ -18,7 +18,7 @@ public:
                            webserv::core::Client &client);
 
   // Générateur d'erreur complet
-  static std::string generateError(int code, const ServerConfig &config);
+  static std::string generateError(int code, const ServerConfig &config, bool keepAlive = false);
 
   // Helper recupere le message du code (ex: 200 -> "OK")
   static std::string getStatusMessage(int code);

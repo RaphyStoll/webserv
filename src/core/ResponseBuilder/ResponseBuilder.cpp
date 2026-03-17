@@ -33,14 +33,17 @@ webserv::http::ResponseBuilder::build(const webserv::http::Request &req,
     response << "HTTP/1.1 " << redirectCode << " "
              << getStatusMessage(redirectCode) << "\r\n";
     response << "Location: " << redirectUrl << "\r\n";
-    response << "Connection: close\r\n\r\n";
+    if (req.keepAlive())
+      response << "Connection: keep-alive\r\n\r\n";
+    else
+      response << "Connection: close\r\n\r\n";
     return response.str();
   }
 
   if (!RouteMatcher::isMethodAllowed(req.getMethod(), route)) {
     _logger << "Method " << req.getMethod() << " not allowed for route "
             << req.getPath() << std::endl;
-    return generateError(405, config);
+    return generateError(405, config, req.keepAlive());
   }
 
   std::string method = req.getMethod();
@@ -53,12 +56,13 @@ webserv::http::ResponseBuilder::build(const webserv::http::Request &req,
     return Delete::execute(req, config, route, client);
   }
 
-  return generateError(501, config);
+  return generateError(501, config, req.keepAlive());
 }
 
 std::string
 webserv::http::ResponseBuilder::generateError(int code,
-                                              const ServerConfig &config) {
+                                              const ServerConfig &config,
+                                              bool keepAlive) {
   libftpp::debug::DebugLogger _logger("ResponseBuilder");
   _logger << "Generating error response for code: " << code << std::endl;
 
@@ -98,7 +102,10 @@ webserv::http::ResponseBuilder::generateError(int code,
   response << "HTTP/1.1 " << code << " " << msg << "\r\n";
   response << "Content-Type: text/html\r\n";
   response << "Content-Length: " << body.length() << "\r\n";
-  response << "Connection: close\r\n";
+  if (keepAlive)
+    response << "Connection: keep-alive\r\n";
+  else
+    response << "Connection: close\r\n";
   response << "\r\n";
   response << body;
 

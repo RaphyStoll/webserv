@@ -271,8 +271,12 @@ void webserv::core::EventLoop::_handle_poll_events() {
             _poll_fds[i].events = POLLIN;
 
             _logger << "[EventLoop] Response sent fully to " << fd << std::endl;
-            _close_connection(fd, i);
-            i--;
+            if (client.getParser().getRequest().keepAlive()) {
+               client.reset();
+            } else {
+               _close_connection(fd, i);
+               i--;
+            }
             continue;
           } else {
             _poll_fds[i].events = POLLIN;

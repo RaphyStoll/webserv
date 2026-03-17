@@ -79,22 +79,21 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd,
           _cgiFds[pipeIn] = &client;
         }
 
-        client.appendResponse("HTTP/1.1 200 OK\r\nConnection: close\r\n");
+        if (req.keepAlive())
+          client.appendResponse("HTTP/1.1 200 OK\r\nConnection: keep-alive\r\n");
+        else
+          client.appendResponse("HTTP/1.1 200 OK\r\nConnection: close\r\n");
         _poll_fds[poll_index].events = POLLIN | POLLOUT;
       } else if (!responseData.empty()) {
         client.appendResponse(responseData);
         _poll_fds[poll_index].events = POLLIN | POLLOUT;
       }
 
-      if (!client.isExecutingCgi() && !req.keepAlive()) {
-        client.reset();
-      }
-
     } else if (state == http::RequestParser::ERROR) {
 		int errorCode = parser.getErrorCode();
     	_logger << "[EventLoop] Parsing error on fd " << client_fd << " with code " << errorCode << std::endl;
     	const ServerConfig &srvConfig = _getServerConfig(client_fd, parser.getRequest());
-    	std::string errorResponse = webserv::http::ResponseBuilder::generateError(errorCode, srvConfig);
+    	std::string errorResponse = webserv::http::ResponseBuilder::generateError(errorCode, srvConfig, parser.getRequest().keepAlive());
 		client.appendResponse(errorResponse);
     	_poll_fds[poll_index].events = POLLIN | POLLOUT;
     }

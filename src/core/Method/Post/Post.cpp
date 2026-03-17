@@ -103,7 +103,10 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
     response << "Location: " << req.getPath() << "\r\n";
     response << "Content-Type: text/plain\r\n";
     response << "Content-Length: 17\r\n";
-    response << "Connection: close\r\n";
+    if (req.keepAlive())
+        response << "Connection: keep-alive\r\n";
+    else
+        response << "Connection: close\r\n";
     response << "\r\n";
     response << "Upload successful";
 

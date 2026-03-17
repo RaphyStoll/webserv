@@ -28,7 +28,7 @@ private:
                                     const ServerConfig &server, int &httpCode);
 
   // Écrit physiquement le fichier depuis le body mémoire ou tmp file.
-  static bool _writeFile(const std::string &path, const Request &req);
+  static bool _writeFile(const std::string &path, const Request &req, bool *flag);
 };
 
 } // namespace http

@@ -59,7 +59,7 @@ void DataConfig::dir_server()
 	else if(_token[_i] == "max_body_size")
 	{
 		ipp();
-		valid_max_body_size();
+		//valid_max_body_size();
 		_currentServer.max_body_size = libftpp::str::StringUtils::stoi(_token[_i]);
 		_i++;
 	}

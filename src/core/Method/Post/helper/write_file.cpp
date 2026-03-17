@@ -1,44 +1,54 @@
 #include "Post.hpp"
-
+#include "ResponseBuilder.hpp"
 #include <fstream>
 #include <string>
 
-bool webserv::http::Post::_writeFile(const std::string& path, const Request& req)
+bool webserv::http::Post::_writeFile(const std::string &path, const Request &req, bool *flag)
 {
 	std::ofstream file(path.c_str(), std::ios::binary | std::ios::trunc);
-	if (!file.is_open()) {
+	if (!file.is_open())
+	{
 		return false;
 	}
 
-	if (req.hasBodyTmpFile()) {
+	if (req.hasBodyTmpFile())
+	{
 		std::ifstream src(req.getBodyTmpPath().c_str(), std::ios::binary);
-		if (!src.is_open()) {
+		if (!src.is_open())
+		{
 			file.close();
 			return false;
 		}
 
 		char buffer[8192];
-		while (src.good()) {
+		while (src.good())
+		{
 			src.read(buffer, sizeof(buffer));
 			std::streamsize readBytes = src.gcount();
 			if (readBytes > 0)
 				file.write(buffer, readBytes);
-			if (file.fail()) {
+			if (file.fail())
+			{
+				*flag = true;
 				src.close();
 				file.close();
 				return false;
 			}
 		}
 
-		if (!src.eof()) {
+		if (!src.eof())
+		{
 			src.close();
 			file.close();
 			return false;
 		}
 		src.close();
-	} else {
+	}
+	else
+	{
 		file << req.getBody();
-		if (file.fail()) {
+		if (file.fail())
+		{
 			file.close();
 			return false;
 		}

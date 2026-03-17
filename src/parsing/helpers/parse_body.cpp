@@ -253,7 +253,7 @@ bool RequestParser::_initTmpFile() {
   _bodyTmpPath = _generateTmpPath();
   std::cout << _bodyTmpPath << std::endl;
   _bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
-  std::cout << _bodyTmpFd << std::endl;
+ // std::cout << _bodyTmpFd << std::endl;
   if (_bodyTmpFd < 0) {
     _bodyTmpPath = _generateTmpPath();
     _bodyTmpFd = open(_bodyTmpPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);

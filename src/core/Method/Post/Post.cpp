@@ -77,8 +77,8 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
 
     _logger << "Saving POST data to: " << uploadPath << std::endl;
 
-    bool writeSuccess = _writeFile(uploadPath, req);
-
+	bool flag = false;
+    bool writeSuccess = _writeFile(uploadPath, req, &flag);
     if (req.hasBodyTmpFile())
     {
       std::string tmpPath = req.getBodyTmpPath();
@@ -88,6 +88,9 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
     }
 
     if (!writeSuccess) {
+		if (flag == true)
+			return _logger << "System Error: storage ful " << uploadPath
+                     << std::endl,ResponseBuilder::generateError(507, config);
       return _logger << "System Error: Could not write file to " << uploadPath
                      << std::endl,
              ResponseBuilder::generateError(500, config);

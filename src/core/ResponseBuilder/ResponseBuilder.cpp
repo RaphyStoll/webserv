@@ -45,8 +45,6 @@ webserv::http::ResponseBuilder::build(const webserv::http::Request &req,
 
   std::string method = req.getMethod();
 
-  req.print();
-
   if (method == "GET") {
     return Get::execute(req, config, route, client);
   } else if (method == "POST") {
@@ -71,12 +69,7 @@ webserv::http::ResponseBuilder::generateError(int code,
 
   std::map<int, std::string>::const_iterator it = config.error_pages.find(code);
   if (it != config.error_pages.end()) {
-    std::string filePath = config.root + it->second;
-
-    if (it->second[0] != '/')
-      filePath = config.root + "/" + it->second;
-    else
-      filePath = config.root + it->second;
+    std::string filePath = it->second;
 
     struct stat s;
     if (::stat(filePath.c_str(), &s) == 0 && !(s.st_mode & S_IFDIR) &&
@@ -95,7 +88,7 @@ webserv::http::ResponseBuilder::generateError(int code,
         << "</title></head>";
     oss << "<body style=\"font-family: sans-serif; text-align: center; "
            "padding: 50px;\">";
-    oss << "<h1>Error " << code << "</h1>";
+    oss << "<h1>Errorr " << code << "</h1>";
     oss << "<h2>" << msg << "</h2>";
     oss << "<hr><p>webserv/1.0</p></body></html>";
     body = oss.str();

@@ -37,7 +37,7 @@ namespace webserv
 			~RequestParser();
 
 			State parse(const char *data, size_t size,
-						const NetworkConfig &config);//SDU suppr namespace
+						const NetworkConfig &config);
 			Request &getRequest();
 
 			int getErrorCode() const { return _errorCode; }

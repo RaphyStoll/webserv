@@ -8,6 +8,7 @@ Un autre étudiant avant toi 😄
 Pour voir tout ce qui écoute sur tous les ports, fais :
 sudo ss -lntup
 Cherche la ligne avec 9001 dedans.
+puis : kill -9 PID
 
 🔧 Côté code (pour éviter ce problème)
 

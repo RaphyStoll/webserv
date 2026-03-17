@@ -17,7 +17,7 @@ RequestParser::~RequestParser()
 	_cleanupTmpFile();
 }
 
-RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf) // SDU suppr namespace
+RequestParser::State RequestParser::parse(const char *data, size_t size, const NetworkConfig &conf)
 {
 	if (!_configResolved)
 	{

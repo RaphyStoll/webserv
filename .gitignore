@@ -53,5 +53,6 @@ test_parser
 test_request
 Webserv
 newfile.html
+upload
 
 compile_flags.txt

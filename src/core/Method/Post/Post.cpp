@@ -42,7 +42,7 @@ std::string webserv::http::Post::execute(const webserv::http::Request &req,
   _logger << "Post fullPath (fixed): " << fullPath << std::endl;
 
   if (libftpp::str::PathUtils::isDirectory(fullPath)) {
-    if (route.cgi == false) {
+    if (route.cgi == false && route.upload == false) {
       return _logger << "POST on directory without CGI forbidden" << std::endl,
              ResponseBuilder::generateError(403, config);
     }

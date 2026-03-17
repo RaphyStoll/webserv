@@ -149,7 +149,7 @@ void DataConfig::dir_route()
 	else if(_token[_i] == "cgi_path")
 	{
 		ipp();
-//		valid_path(); //SDU chiant pour les test, a remettre.
+		//valid_path(); //SDU chiant pour les test, a remettre.
 		_currentRoute.cgi_path = _token[_i];
 		_i++;
 	}

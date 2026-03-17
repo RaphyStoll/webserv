@@ -44,9 +44,6 @@ webserv::http::ResponseBuilder::build(const webserv::http::Request &req,
 
   std::string method = req.getMethod();
 
-  //   http://37.59.120.163:9003/login2.html   //SDU
-  req.print(); // SDU
-
   if (method == "GET") {
     return Get::execute(req, config, route, client);
   } else if (method == "POST") {

@@ -1,7 +1,7 @@
 #include"ConfigParser.hpp"
 
 
-static bool is_digit(char c) //SDU mettre ailleur?
+static bool is_digit(char c)
 {
 	return (c >= '0' && c <= '9');
 }

@@ -118,55 +118,6 @@ std::string webserv::http::Get::execute(const webserv::http::Request &req,
   return _createSuccessResponse(content, fullPath);
 }
 
-// std::string webserv::http::Get::execute(const http::Request& req, const
-// ServerConfig& config, const RouteConfig& route)
-// {
-// 	(void)route;
-// 	int httpCode = 200;
-// 	std::string content = "";
-// 	std::string fullPath = "";
-
-// 	if (httpCode != 200)
-// 		return ResponseBuilder::generateError(httpCode, config);
-
-// 	//   http://37.59.120.163:9003/search?query=webserv   //SDU
-// 	for(size_t i = 0; i < config.routes.size(); i++) //SDU CGI, verifier ou
-// il faut le positionner
-// 	{
-// 		if(req.getPath() == config.routes[i].path)
-// 		{
-// 			fullPath = "cgi.html";
-
-// 			content = execute_cgi(req, config, i);
-// 			return _createSuccessResponse(content, fullPath);
-// 		}
-// 	}
-// 	// TODO RAPH: modif getSecurePath pour aller avec cgi
-// 	// remplir full path avec vrai path cgi et descendre le block en haut ->
-// en bas 	fullPath = _getSecurePath(config.root, req.getPath(),
-// httpCode);//SDU : trop restrictif
-// 	//std::cerr << "fullPath = " <<  fullPath << " code = " << httpCode <<
-// std::endl; 	struct stat s; 	if (stat(fullPath.c_str(), &s) == 0 &&
-// (s.st_mode & S_IFDIR)) { 		if (!_checkIndexFile(fullPath, httpCode,
-// config)) {
-// 			// TODO: RAPH
-// 			// Ici, plus tard : quelque cgose comme if
-// (config.autoindex) return AutoIndex::gen(...); 			return
-// ResponseBuilder::generateError(httpCode, config);
-// 		}
-// 	}
-
-// 	if (access(fullPath.c_str(), R_OK) != 0)
-// 	{
-// 		return ResponseBuilder::generateError(403, config);
-// 	}
-// 	content = _readFile(fullPath);
-// 	if (content.empty() && s.st_size > 0)
-// 		return ResponseBuilder::generateError(500, config);
-
-// 	return _createSuccessResponse(content, fullPath);
-// }
-
 std::string
 webserv::http::Get::_displayAutoIndex(const std::string &path,
                                       const std::string &requestPath) {

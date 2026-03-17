@@ -1,6 +1,5 @@
 # include "ConfigParser.hpp"
 
-//SDU pour les tests, pourra etre supprimee
 void print_vect(const std::vector<std::string> &vect)
 {
 	size_t i = 0;

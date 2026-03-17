@@ -146,13 +146,6 @@ void DataConfig::dir_route()
 		_currentRoute.cgi_extension = _token[_i];
 		_i++;
 	}
-	else if(_token[_i] == "cgi_path")
-	{
-		ipp();
-//		valid_path(); //SDU chiant pour les test, a remettre.
-		_currentRoute.cgi_path = _token[_i];
-		_i++;
-	}
 	else if(_token[_i] == "redirect")
 	{
 		_i++;

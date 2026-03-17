@@ -1,5 +1,5 @@
-http://37.59.120.163:9001/
-http://37.59.120.163:9001/methods.html
-http://37.59.120.163:9001/post_uploads.html
-http://37.59.120.163:9001/demo.html
-http://37.59.120.163:9001/manager.html
+http://127.0.0.1:9001
+http://127.0.0.1:9001/methods.html
+http://127.0.0.1:9001/post_uploads.html
+http://127.0.0.1:9001/demo.html
+http://127.0.0.1:9001/manager.html

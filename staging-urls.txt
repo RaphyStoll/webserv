@@ -1,3 +1,5 @@
-http://127.0.0.1:2224
-http://127.0.0.1:2224/test_server
-http://127.0.0.1:2224/test1
+http://37.59.120.163:9001/
+http://37.59.120.163:9001/methods.html
+http://37.59.120.163:9001/post_uploads.html
+http://37.59.120.163:9001/demo.html
+http://37.59.120.163:9001/manager.html

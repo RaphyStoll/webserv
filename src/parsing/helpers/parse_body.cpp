@@ -41,6 +41,8 @@ bool writeAll(int fd, const char *data, size_t len) {
 } // namespace
 
 RequestParser::State RequestParser::_determineBodyParsing() {
+  _resolveConfigLimits();
+
   if (_hasTransferEncoding && _seenContentLength) {
     _errorCode = 400;
     return ERROR;
@@ -162,7 +164,8 @@ RequestParser::State RequestParser::_parseChunkedBody() {
         return ERROR;
       }
 
-      if (_totalChunkRead + _currentChunkSize > _maxBodySize) {
+      if (_currentChunkSize > _maxBodySize ||
+          _totalChunkRead > _maxBodySize - _currentChunkSize) {
         _errorCode = 413;
         _cleanupTmpFile();
         return ERROR;

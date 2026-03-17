@@ -9,9 +9,9 @@ bool RequestParser::_parseRequestLine(const std::string &line)
 	std::istringstream iss(line);
 	std::string method, uri, version;
 
+	
 	if (!(iss >> method >> uri >> version))
 		return false;
-
 	if (!_isValidMethod(method))
 	{
 		_errorCode = 501;
@@ -55,6 +55,7 @@ bool RequestParser::_parseRequestLine(const std::string &line)
 	}
 
 	_request.setMethod(method);
+
 	_request.setHttpVersion(version);
 
 	return true;

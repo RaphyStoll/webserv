@@ -8,7 +8,8 @@ RouteConfig::RouteConfig() :
 	upload(false),
 	upload_path(""),
 	cgi(false),
-	cgi_extension("")
+	cgi_extension(""),
+	cgi_path("")
 {
 }
 

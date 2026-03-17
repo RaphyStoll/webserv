@@ -58,6 +58,7 @@ RequestParser::State RequestParser::_determineBodyParsing() {
   if (!contentLengthStr.empty()) {
     char *end;
     _contentLength = std::strtoul(contentLengthStr.c_str(), &end, 10);
+
     if (*end != '\0') {
       _errorCode = 400; // Content-Length error
       return ERROR;

@@ -46,7 +46,8 @@ class RouteConfig
 	bool cgi;
 	std::string cgi_extension;
 	std::map<int, std::string> redirect;
-
+	std::string cgi_path;
+	
 	RouteConfig();
 
 	public :

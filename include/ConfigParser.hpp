@@ -47,7 +47,6 @@ class RouteConfig
 	std::string upload_path;
 	bool cgi;
 	std::string cgi_extension;
-	std::string cgi_path;
 	std::map<int, std::string> redirect;
 
 	RouteConfig();

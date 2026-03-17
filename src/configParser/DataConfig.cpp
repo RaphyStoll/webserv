@@ -36,7 +36,7 @@ void DataConfig::openConf()
 			_brutLine.push_back(line);
 	}
 
-	if(_brutLine.empty()) //SDU inutil, tester + tard??
+	if(_brutLine.empty())
 	{
 		throw std::runtime_error("fichier de config vide");
 	}
@@ -94,7 +94,7 @@ void DataConfig::pars_state()
 //	_state = GLOBAL;
 
 
-	while(_i < _token.size()) //SDU passer en case?
+	while(_i < _token.size())
 	{
 		if(_state == GLOBAL)
 		{
@@ -117,17 +117,12 @@ void DataConfig::pars_state()
 
 NetworkConfig DataConfig::cParser()
 {
-	std::cout << "config_path = " << config_path << std::endl; //SDU
+	std::cout << "config_path = " << config_path << std::endl;
 
 	openConf();
-//	print_vect(_brutLine); //SDU
-//	std::cout << std::endl; //SDU
 	tockenize();
-//	print_vect(_token); //SDU
-//	std::cout << std::endl; //SDU
 	pars_state();
 	std::cout << std::endl;
-//	_servers.print(); //SDU
 
 	NetworkConfig net_tmp;
 	for(size_t i = 0; i < _servers.size(); i++)

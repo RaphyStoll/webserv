@@ -66,7 +66,7 @@ namespace webserv
 			//Check si le fichier tmp est cree pour stock le chunk, sinon c'est dans la memoire 
 			bool hasBodyTmpFile() const { return !_bodyTmpPath.empty(); }
 
-			void print(void) const; // SDU
+			void print(void) const;
 		};
 	} // namespace http
 } // namespace webserv

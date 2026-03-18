@@ -35,6 +35,8 @@ public:
   bool isExecutingCgi() const;
   void setExecutingCgi(bool isExecuting);
   void markCgiStartTime();
+  void appendCgiOutput(const std::string &data);
+  std::string getAndClearCgiOutput();
 
   // Gestion du Timeout
   void updateLastActivity();
@@ -59,6 +61,7 @@ private:
   libftpp::time::Timeout _last_activity;
   libftpp::time::Timeout _cgi_start_time;
   libftpp::Buffer::Buffer _response_buffer;
+  std::string _cgiOutputBuffer;
 };
 
 } // namespace core

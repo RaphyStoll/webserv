@@ -1,24 +1,34 @@
 #!/usr/bin/env php
 <?php
-// Script CGI pour récupérer les X dernières lignes de logs
 echo "Content-Type: text/plain\r\n\r\n";
 
-$logFile = realpath(__DIR__ . '/../../log/general.log');
+echo "[INFO] You can add ?lines=X at the end of the URL to display the last X lines (e.g., /get_logs.php?lines=50)\n";
+echo str_repeat("-", 80) . "\n\n";
+
+$numLines = 20;
+
+if (empty($_GET) && getenv('QUERY_STRING')) {
+    parse_str(getenv('QUERY_STRING'), $_GET);
+}
+
+if (isset($_GET['lines']) && is_numeric($_GET['lines'])) {
+    $numLines = (int)$_GET['lines'];
+    if ($numLines < 1) $numLines = 1;
+    if ($numLines > 5000) $numLines = 5000;
+}
+
+$logFile = realpath(__DIR__ . '/../../../log/general.log');
 
 if (!$logFile || !file_exists($logFile)) {
-    echo "[SYSTEM] Aucune trace de log trouvée dans /log/general.log\n";
+    echo "[SYSTEM] No log trace found in /log/general.log\n";
     exit;
 }
+$command = "tail -n " . escapeshellarg($numLines) . " " . escapeshellarg($logFile) . " 2>&1";
+$output = shell_exec($command);
 
-// On lit les 20 dernières lignes du fichier de logs (simili `tail -n 20`)
-$lines = file($logFile);
-if ($lines === false) {
-    echo "[ERROR] Impossible de lire le fichier de logs.\n";
-    exit;
-}
-
-$last_lines = array_slice($lines, -20);
-foreach ($last_lines as $line) {
-    echo $line;
+if ($output === null) {
+    echo "[ERROR] Unable to read the log file.\n";
+} else {
+    echo $output;
 }
 ?>

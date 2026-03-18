@@ -1,106 +1,405 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Webserv 42 | Server CGI</title>
-    <link rel="stylesheet" href="/assets/css/main.css">
-</head>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <style>
+      .cgi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
 
-<body>
+      .cgi-form-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .cgi-card {
+        background: var(--card-bg, #fff);
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .cgi-card h4 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .cgi-card p {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        flex-grow: 1;
+      }
+
+      .iframe-container {
+        width: 100%;
+        height: 600px;
+        border: 2px solid var(--accent-color, #3b82f6);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+      }
+    </style>
+  </head>
+
+  <body>
     <nav class="sidebar">
-        <div class="logo">Webserv</div>
-        <ul class="nav-links">
-            <li><a href="/">Dashboard</a></li>
-            <li><a href="methods.html">HTTP Methods</a></li>
-            <li><a href="post_uploads.html">File Uploads</a></li>
-            <li><a href="demo.html" class="active">CGI Demo</a></li>
-            <li><a href="manager.html">File Manager (DELETE)</a></li>
-        </ul>
+      <div class="logo">Webserv</div>
+      <ul class="nav-links">
+        <li><a href="/">Dashboard</a></li>
+        <li><a href="methods.html">HTTP Methods</a></li>
+        <li><a href="post_uploads.html">File Uploads</a></li>
+        <li><a href="demo.html" class="active">CGI Demo</a></li>
+        <li><a href="manager.html">File Manager (DELETE)</a></li>
+      </ul>
     </nav>
     <main class="content">
-        <header>
-            <h1>CGI Execution (PHP/Python)</h1>
-            <span class="status-badge online">/cgi-bin</span>
-        </header>
+      <header>
+        <h1>CGI Application Hub</h1>
+        <span class="status-badge online">/cgi-bin & /cgi</span>
+      </header>
 
-        <section class="cards-grid">
-            <div class="card" style="grid-column: span 2;">
-                <h3>⚙️ CGI Executable Demos</h3>
-                <p style="color: var(--text-muted); margin-bottom: 1rem;">
-                    Test Webserv's dynamic scripting execution. The backend executes external binaries via `execve`
-                    using pipes to stream the response back.
-                </p>
+      <p style="color: var(--text-muted); margin-bottom: 2rem">
+        Test all the refactored CGI scripts. The backend executes external
+        binaries (PHP, Python, Bash) via `execve`, parses the query strings, and
+        returns beautifully formatted HTML directly parsed by the browser below.
+      </p>
 
-                <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
-                    <form id="cgiForm" style="flex: 1; display:flex; gap:0.5rem; min-width: 300px;">
-                        <input type="text" id="cgiCmd" style="flex: 1;" placeholder="Name for PHP script..." required>
-                        <button type="submit" class="btn btn-primary">Run PHP</button>
-                    </form>
+      <div class="cgi-grid">
+        <!-- SEARCH SCRIPT -->
+        <div class="cgi-card">
+          <h4>🔍 Python Search Directory</h4>
+          <p>Scans the <code>/</code> root folder for matched files/folders.</p>
+          <form class="cgi-form-group" action="/search" method="GET">
+            <input
+              type="text"
+              name="q"
+              placeholder="ex: html, www..."
+              style="flex: 1; min-width: 0"
+            />
+            <button
+              type="submit"
+              formtarget="cgiFrame"
+              class="btn btn-primary"
+              title="Lancer avec paramètre (iframe)"
+            >
+              ▶
+            </button>
+            <a
+              href="/search"
+              target="_blank"
+              class="btn"
+              style="
+                background: #e5e7eb;
+                color: #374151;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Ouvrir la page du CGI (nouvel onglet)"
+              >↗️</a
+            >
+          </form>
+        </div>
 
-                    <button class="btn btn-warning" style="background:var(--warning-color); color:#fff; border:none;"
-                        onclick="runBonusCgi('/sysinfo')">🐍 Run Python (sysinfo.py)</button>
-                    <button class="btn" onclick="runBonusCgi('/list_env')">💻 Run Bash (list_env.sh)</button>
-                    <button class="btn btn-danger"
-                        style="background:#da3633; color:#fff; border:none; margin-left: auto;"
-                        onclick="runBonusCgi('/infinite')">🔥 TEST: Infinite Server Block</button>
-                </div>
-            </div>
-        </section>
+        <!-- HELLO SCRIPT -->
+        <div class="cgi-card">
+          <h4>👋 PHP Say Hello</h4>
+          <p>Dynamic greeting page with light/dark mode UI.</p>
+          <form class="cgi-form-group" action="/hello" method="GET">
+            <input
+              type="text"
+              name="name"
+              placeholder="Your name..."
+              style="flex: 1; min-width: 0"
+            />
+            <button
+              type="submit"
+              formtarget="cgiFrame"
+              class="btn btn-primary"
+              title="Lancer avec paramètre (iframe)"
+            >
+              ▶
+            </button>
+            <a
+              href="/hello"
+              target="_blank"
+              class="btn"
+              style="
+                background: #e5e7eb;
+                color: #374151;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Ouvrir la page du CGI (nouvel onglet)"
+              >↗️</a
+            >
+          </form>
+        </div>
 
-        <h2>CGI Raw Output</h2>
-        <div class="terminal" id="cgiLog" style="border-color: var(--warning-color);">Waiting for CGI execution...</div>
+        <!-- INFINITE SCRIPT -->
+        <div class="cgi-card" style="border-left: 4px solid #da3633">
+          <h4>⏳ PHP Timeout Test</h4>
+          <p>Will sleep for the given time to test connection limits.</p>
+          <form class="cgi-form-group" action="/infinite" method="GET">
+            <input
+              type="text"
+              name="time"
+              placeholder="ex: 3s, 1m..."
+              style="flex: 1; min-width: 0"
+            />
+            <button
+              type="submit"
+              formtarget="cgiFrame"
+              class="btn btn-danger"
+              style="background: #da3633; color: white"
+              title="Lancer avec paramètre (iframe)"
+            >
+              ▶
+            </button>
+            <a
+              href="/infinite"
+              target="_blank"
+              class="btn"
+              style="
+                background: #fca5a5;
+                color: #991b1b;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Ouvrir la page du CGI (nouvel onglet)"
+              >↗️</a
+            >
+          </form>
+        </div>
+
+        <!-- LOGIN SCRIPT -->
+        <div class="cgi-card">
+          <h4>🔐 Python Login (POST/GET)</h4>
+          <p>Displays a login form and processes POST data.</p>
+          <div class="cgi-form-group">
+            <a
+              href="/login"
+              target="cgiFrame"
+              class="btn"
+              style="
+                flex: 1;
+                text-align: center;
+                background: #4f46e5;
+                color: white;
+              "
+              >Ouvrir Application</a
+            >
+            <a
+              href="/login"
+              target="_blank"
+              class="btn"
+              style="
+                background: #e0e7ff;
+                color: #3730a3;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Nouvel onglet"
+              >↗️</a
+            >
+          </div>
+        </div>
+
+        <!-- SYSINFO SCRIPT -->
+        <div class="cgi-card">
+          <h4>🐍 Python Sysinfo</h4>
+          <p>Real-time OS hardware metrics (CPU, RAM).</p>
+          <div class="cgi-form-group">
+            <a
+              href="/sysinfo"
+              target="cgiFrame"
+              class="btn btn-warning"
+              style="
+                flex: 1;
+                text-align: center;
+                background: #f59e0b;
+                color: white;
+              "
+              >Stats Système</a
+            >
+            <a
+              href="/sysinfo"
+              target="_blank"
+              class="btn"
+              style="
+                background: #fef3c7;
+                color: #92400e;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Nouvel onglet"
+              >↗️</a
+            >
+          </div>
+        </div>
+
+        <!-- BASH ENV -->
+        <div class="cgi-card">
+          <h4>💻 Bash Environment</h4>
+          <p>Dumps the environment variables passed to the CGI.</p>
+          <div class="cgi-form-group">
+            <a
+              href="/list_env"
+              target="cgiFrame"
+              class="btn"
+              style="
+                flex: 1;
+                text-align: center;
+                background: #10b981;
+                color: white;
+              "
+              >Lister Env</a
+            >
+            <a
+              href="/list_env"
+              target="_blank"
+              class="btn"
+              style="
+                background: #d1fae5;
+                color: #065f46;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Nouvel onglet"
+              >↗️</a
+            >
+          </div>
+        </div>
+
+        <!-- PHP LOGS -->
+        <div class="cgi-card">
+          <h4>📜 PHP Get Logs</h4>
+          <p>Reads the 20 last lines of a dummy error log file.</p>
+          <div class="cgi-form-group">
+            <a
+              href="/get_logs"
+              target="cgiFrame"
+              class="btn"
+              style="
+                flex: 1;
+                text-align: center;
+                background: #6b7280;
+                color: white;
+              "
+              >Lire les Logs</a
+            >
+            <a
+              href="/get_logs"
+              target="_blank"
+              class="btn"
+              style="
+                background: #f3f4f6;
+                color: #374151;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Nouvel onglet"
+              >↗️</a
+            >
+          </div>
+        </div>
+
+        <!-- PHP FILES -->
+        <div class="cgi-card">
+          <h4>📂 PHP List Files</h4>
+          <p>Enumerates the server's uploads folder.</p>
+          <div class="cgi-form-group">
+            <a
+              href="/list_files"
+              target="cgiFrame"
+              class="btn"
+              style="
+                flex: 1;
+                text-align: center;
+                background: #8b5cf6;
+                color: white;
+              "
+              >Lister Fichiers</a
+            >
+            <a
+              href="/list_files"
+              target="_blank"
+              class="btn"
+              style="
+                background: #ede9fe;
+                color: #5b21b6;
+                padding: 0.5rem 0.75rem;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+              "
+              title="Nouvel onglet"
+              >↗️</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <h2>CGI Live Output</h2>
+      <p
+        style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px"
+      >
+        Select a script above. The HTML output will be rendered seamlessly here.
+      </p>
+
+      <iframe
+        name="cgiFrame"
+        id="cgiFrame"
+        class="iframe-container"
+        src="about:blank"
+        title="CGI Execution Frame"
+      ></iframe>
     </main>
 
-    <style>
-        .loader {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--accent-color);
-            animation: spin 1s ease-in-out infinite;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
     <script>
-        document.getElementById('cgiForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const val = document.getElementById('cgiCmd').value;
-            runBonusCgi(`/hello?name=${encodeURIComponent(val)}`);
-        });
+      const iframe = document.getElementById("cgiFrame");
 
-        async function runBonusCgi(path) {
-            const term = document.getElementById('cgiLog');
-            term.innerHTML = `<span class="loader"></span>[HOST] Executing GET ${path}...\n<span style="color:var(--text-muted); font-size:0.9em;">(En attente des données du serveur...)</span>\n`;
-
-            try {
-                const response = await fetch(path);
-                term.innerText = `[HOST] Executing GET ${path}...\n[CGI-WRAPPER] HTTP ${response.status}\n\n[--- OUTPUT ---]\n`;
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    term.innerText += decoder.decode(value, { stream: true });
-                }
-                term.innerText += "\n[--- END OF SCRIPT ---]";
-            } catch (err) {
-                term.innerText = `\n[ERROR] Request Failed / Interrompu: ${err}\n(Le navigateur a coupé la connexion ou le serveur a crashé)`;
-            }
+      // Petite feature pour charger le fond quand l'iframe s'actualise
+      iframe.addEventListener("load", function () {
+        if (
+          iframe.src !== "about:blank" &&
+          iframe.contentWindow.location.href !== "about:blank"
+        ) {
+          iframe.style.borderColor = "#10b981"; // Passe en vert après succès
+          setTimeout(() => {
+            iframe.style.borderColor = "var(--accent-color, #3b82f6)";
+          }, 1000);
         }
+      });
     </script>
-</body>
-
+  </body>
 </html>

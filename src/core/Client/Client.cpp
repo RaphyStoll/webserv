@@ -56,6 +56,16 @@ void webserv::core::Client::markCgiStartTime() {
   _cgi_start_time.touch(libftpp::time::Clock::now_ms());
 }
 
+void webserv::core::Client::appendCgiOutput(const std::string &data) {
+  _cgiOutputBuffer.append(data);
+}
+
+std::string webserv::core::Client::getAndClearCgiOutput() {
+  std::string output = _cgiOutputBuffer;
+  _cgiOutputBuffer.clear();
+  return output;
+}
+
 void webserv::core::Client::updateLastActivity() {
   _logger << "Updating last activity for fd: " << _fd << std::endl;
   _last_activity.touch(libftpp::time::Clock::now_ms());
@@ -91,6 +101,7 @@ void webserv::core::Client::clearResponseBuffer() {
 void webserv::core::Client::reset() {
   _logger << "Resetting client on fd: " << _fd << std::endl;
   _response_buffer.clear();
+  _cgiOutputBuffer.clear();
   _isChunked = false;
   _isExecutingCgi = false;
   _cgi.reset();

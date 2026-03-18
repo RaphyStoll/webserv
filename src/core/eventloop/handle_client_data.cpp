@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "DisplayFormatter.hpp"
 #include "EventLoop.hpp"
 #include "Request.hpp"
 #include "RequestParser.hpp"
@@ -17,8 +18,8 @@
 using namespace libftpp::net;
 using namespace webserv;
 
-void webserv::core::EventLoop::_handle_client_data(int client_fd,
-                                                   size_t poll_index) {
+void webserv::core::EventLoop::_handle_client_data(int client_fd, size_t poll_index) {
+	_logger << "\n" << pad_line("NEW REQUEST") << std::endl;
   _logger << "Handling client data on fd " << client_fd << std::endl;
   char buffer[4096];
   ssize_t bytes = ::read(client_fd, buffer, sizeof(buffer));
@@ -79,10 +80,6 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd,
           _cgiFds[pipeIn] = &client;
         }
 
-        if (req.keepAlive())
-          client.appendResponse("HTTP/1.1 200 OK\r\nConnection: keep-alive\r\n");
-        else
-          client.appendResponse("HTTP/1.1 200 OK\r\nConnection: close\r\n");
         _poll_fds[poll_index].events = POLLIN | POLLOUT;
       } else if (!responseData.empty()) {
         client.appendResponse(responseData);

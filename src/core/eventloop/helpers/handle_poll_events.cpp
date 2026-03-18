@@ -88,16 +88,86 @@ void webserv::core::EventLoop::_handle_poll_events() {
         char buf[8192];
         ssize_t n = read(fd, buf, sizeof(buf));
         if (n > 0) {
-          client->appendResponse(std::string(buf, n));
-          for (size_t k = 0; k < _poll_fds.size(); ++k) {
-            if (_poll_fds[k].fd == client->getFd()) {
-              _poll_fds[k].events |= POLLOUT;
-              break;
+          if (!client->isChunked()) {
+            client->appendCgiOutput(std::string(buf, n));
+            std::string currentOutput = client->getAndClearCgiOutput();
+            size_t headerEnd = currentOutput.find("\r\n\r\n");
+            
+            if (headerEnd != std::string::npos) {
+              client->setChunked(true);
+              std::string cgiHeaders = currentOutput.substr(0, headerEnd);
+              std::string cgiBody = currentOutput.substr(headerEnd + 4);
+              
+              std::string finalResponse = "HTTP/1.1 200 OK\r\n";
+              if (client->getParser().getRequest().keepAlive()) {
+                finalResponse += "Connection: keep-alive\r\n";
+              } else {
+                finalResponse += "Connection: close\r\n";
+              }
+              finalResponse += "Transfer-Encoding: chunked\r\n";
+              finalResponse += cgiHeaders + "\r\n\r\n";
+              client->appendResponse(finalResponse);
+              
+              if (!cgiBody.empty()) {
+                char hex[32];
+                int hex_len = snprintf(hex, sizeof(hex), "%zx\r\n", cgiBody.size());
+                client->appendResponse(std::string(hex, hex_len));
+                client->appendResponse(cgiBody);
+                client->appendResponse("\r\n");
+              }
+              for (size_t k = 0; k < _poll_fds.size(); ++k) {
+                if (_poll_fds[k].fd == client->getFd()) {
+                  _poll_fds[k].events |= POLLOUT;
+                  break;
+                }
+              }
+            } else {
+              client->appendCgiOutput(currentOutput);
+            }
+          } else {
+            char hex[32];
+            int hex_len = snprintf(hex, sizeof(hex), "%zx\r\n", static_cast<size_t>(n));
+            client->appendResponse(std::string(hex, hex_len));
+            client->appendResponse(std::string(buf, n));
+            client->appendResponse("\r\n");
+            
+            for (size_t k = 0; k < _poll_fds.size(); ++k) {
+              if (_poll_fds[k].fd == client->getFd()) {
+                _poll_fds[k].events |= POLLOUT;
+                break;
+              }
             }
           }
         } else if (n == 0) {
+          if (client->isChunked()) {
+             client->appendResponse("0\r\n\r\n");
+          } else {
+            std::string cgiOutput = client->getAndClearCgiOutput();
+            std::string finalResponse = "HTTP/1.1 200 OK\r\n";
+            
+            if (client->getParser().getRequest().keepAlive()) {
+              finalResponse += "Connection: keep-alive\r\n";
+            } else {
+              finalResponse += "Connection: close\r\n";
+            }
+
+            size_t headerEnd = cgiOutput.find("\r\n\r\n");
+            if (headerEnd != std::string::npos) {
+              std::string cgiHeaders = cgiOutput.substr(0, headerEnd);
+              std::string cgiBody = cgiOutput.substr(headerEnd + 4);
+              finalResponse += "Content-Length: " + libftpp::str::StringUtils::itos(cgiBody.size()) + "\r\n";
+              finalResponse += cgiHeaders + "\r\n\r\n" + cgiBody;
+            } else {
+              finalResponse += "Content-Length: " + libftpp::str::StringUtils::itos(cgiOutput.size()) + "\r\n\r\n";
+              finalResponse += cgiOutput;
+            }
+
+            client->appendResponse(finalResponse);
+          }
+
           cgi.reset();
           client->setExecutingCgi(false);
+          client->setChunked(false);
           _cgiFds.erase(fd);
           _poll_fds.erase(_poll_fds.begin() + i);
           i--;

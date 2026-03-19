@@ -138,6 +138,11 @@ pull-libftpp:
 push-libftpp:
 	git subtree push --prefix=lib/LIBFTPP libftpp main
 
+pr-libftpp:
+	@read -p "Nom de la branche pour la PR: " branch; \
+	git subtree push --prefix=lib/LIBFTPP libftpp $$branch; \
+	echo "$(GREEN)✅ Pushed to branch $$branch. Maintenant, va sur GitHub pour ouvrir la PR depuis cette branche !$(NC)"
+
 siege:
 	siege --file=staging-urls.txt --internet --verbose --reps=200 --concurrent=25 --no-parser
 
@@ -180,6 +185,7 @@ help:
 	@echo "$(BLUE)Git Subtree Targets:$(NC)"
 	@echo "  $(GREEN)pull-libftpp$(NC)    Pull updates for LIBFTPP subtree"
 	@echo "  $(GREEN)push-libftpp$(NC)    Push updates for LIBFTPP subtree"
+	@echo "  $(GREEN)pr-libftpp$(NC)      Push updates to a new branch for PR on LIBFTPP"
 	@echo ""
 
 help_fr:
@@ -212,6 +218,7 @@ help_fr:
 	@echo "$(BLUE)Cibles Git Subtree:$(NC)"
 	@echo "  $(GREEN)pull-libftpp$(NC)    Récupérer les mises à jour pour le subtree LIBFTPP"
 	@echo "  $(GREEN)push-libftpp$(NC)    Pousser les mises à jour pour le subtree LIBFTPP"
+	@echo "  $(GREEN)pr-libftpp$(NC)      Pousser les mises à jour vers une branche pour création de PR"
 	@echo ""
 
 

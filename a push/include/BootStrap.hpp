@@ -1,0 +1,36 @@
+#ifndef BOOTSTRAP_HPP
+# define BOOTSTRAP_HPP
+
+# include "libftpp.hpp"
+#include "ConfigParser.hpp"
+
+# include <vector>
+
+namespace webserv {
+
+	/**
+	 * @brief Classe Bootstrap
+	 * 
+	 * Elle prend un type NetworkConfig
+	 */
+	class BootStrap
+	{
+		public:
+			BootStrap(const NetworkConfig& par_config);
+			~BootStrap() {}
+
+			void start();
+			const std::vector<int>& getListenSockets() const;
+
+		private:
+			libftpp::debug::DebugLogger _logger;
+			NetworkConfig _config;
+			std::vector<int> _listen_sockets;
+			void _setup_sockets();
+			void _bind_servers_for_port(int port, const std::vector<ServerConfig>& servers);
+			int _create_listener_socket(int port, const std::string& host);
+	};
+
+}
+
+#endif

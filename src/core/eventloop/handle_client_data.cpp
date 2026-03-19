@@ -22,7 +22,7 @@ void webserv::core::EventLoop::_handle_client_data(int client_fd, size_t poll_in
 	_logger << "\n" << pad_line("NEW REQUEST") << std::endl;
   _logger << "Handling client data on fd " << client_fd << std::endl;
   char buffer[4096];
-  ssize_t bytes = ::read(client_fd, buffer, sizeof(buffer));
+  ssize_t bytes = ::recv(client_fd, buffer, sizeof(buffer), 0);
 
   if (bytes < 0) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {

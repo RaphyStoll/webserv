@@ -84,7 +84,7 @@ void webserv::core::EventLoop::_handle_poll_events() {
       webserv::core::Client *client = it_cgi->second;
       webserv::core::Cgi &cgi = client->getCgi();
 
-      if ((revents & POLLIN) && fd == cgi.getPipeOutReadFd()) {
+      if (((revents & POLLIN) || (revents & POLLHUP)) && fd == cgi.getPipeOutReadFd()) {
         char buf[8192];
         ssize_t n = read(fd, buf, sizeof(buf));
         if (n > 0) {
@@ -182,6 +182,7 @@ void webserv::core::EventLoop::_handle_poll_events() {
           _logger << "[EventLoop] CGI read error: " << std::strerror(errno)
                   << std::endl;
         }
+        continue;
       }
 
       if ((revents & POLLOUT) && fd == cgi.getPipeInWriteFd()) {
